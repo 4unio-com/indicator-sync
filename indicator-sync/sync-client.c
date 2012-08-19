@@ -295,7 +295,7 @@ sync_client_init (SyncClient * client)
  * Creates a new #SyncClient object. Applications wanting to interact
  * with the Sync Indicator should instantiate one of these and use it.
  *
- * The initial state is #SYNC_STATE_IDLE, unpaused, and with no menu.
+ * The initial state is %SYNC_STATE_IDLE, unpaused, and with no menu.
  *
  * @Returns (transfer full): a new SyncClient for the desktop id.
  *                           Free the returned object with g_object_unref().
@@ -409,7 +409,7 @@ sync_client_get_paused (SyncClient * client)
  * sync_client_get_state:
  * @client: a #SyncClient
  *
- * @Returns: the client's current #SyncState, such as #SYNC_STATE_IDLE
+ * @Returns: the client's current #SyncState, such as %SYNC_STATE_IDLE
  */
 SyncState
 sync_client_get_state (SyncClient * client)
@@ -452,7 +452,7 @@ sync_client_get_menu (SyncClient * client)
  * @client: a #SyncClient
  * @paused: a boolean of whether or not the client is paused
  *
- * Sets the SyncClient's paused property.
+ * Sets the client's SyncClient:paused property
  */
 void
 sync_client_set_paused (SyncClient * client, gboolean paused)
@@ -465,9 +465,9 @@ sync_client_set_paused (SyncClient * client, gboolean paused)
 /*
  * sync_client_set_state:
  * @client: a #SyncClient
- * @state: the client's new #SyncState, such as #SYNC_STATE_IDLE
+ * @state: the client's new #SyncState, such as %SYNC_STATE_IDLE
  *
- * Sets the client's 'state' property
+ * Sets the client's SyncClient:paused property
  */
 void
 sync_client_set_state (SyncClient * client, SyncState state)
@@ -482,7 +482,8 @@ sync_client_set_state (SyncClient * client, SyncState state)
  * @client: a #SyncClient
  * @menu_server: a #DbusmenuServer of the menu to be exported by the #SyncClient
  *
- * Sets the menu to be exported to the sync indicator.
+ * Sets the client's SyncClient:menu property specifying which menu
+ * to export to the sync indicator.
  */
 void
 sync_client_set_menu (SyncClient * client, DbusmenuServer * menu_server)
