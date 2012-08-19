@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="/">
+  <interface name="com.canonical.indicator.sync.service">
+
+    <!-- Properties -->
+
+      <!-- The number of SyncClients connected to this service -->
+      <property name="ClientCount" type="u" access="read" />
+
+      <!-- SYNC_STATE_ERROR if any SyncClient is in error state.
+           Otherwise, SYNC_STATE_SYNCING if any SyncClient is syncing.
+           Otherwise, SYNC_STATE_IDLE -->
+      <property name="State" type="u" access="read" />
+
+      <!-- true if any SyncClient is paused -->
+      <property name="Paused" type="b" access="read" />
+
+    <!-- Signals -->
+
+      <!-- Emitted on startup to notify SyncClients of our existence -->
+      <signal name="Exists"/>
+
+  </interface>
+</node>

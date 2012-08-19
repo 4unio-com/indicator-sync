@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.canonical.indicator.sync
+Exec=@libexecdir@/indicator-sync-service

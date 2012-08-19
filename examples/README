@@ -1,0 +1,14 @@
+If you don't have the sync indicator and service already running in Unity,
+you can build and run the demo app this way:
+
+ $ cd indicator-sync
+ $ make
+ $ export G_MESSAGES_DEBUG=all
+ $ export INDICATOR_SERVICE_REPLACE_MODE=1
+ $ export INDICATOR_ALLOW_NO_WATCHERS=1
+ $ ../indicator-sync/indicator-sync-service &
+ $ indicator-loader3  ../indicator-sync/.libs/libsyncindicator.so &
+ $ cd ../examples/
+ $ make sync-client-demo
+ $ ./sync-client-demo
+
