@@ -76,80 +76,21 @@ struct _SyncClient
 ****
 ***/
 
-/**
- * sync_client_new:
- * @desktop : A desktop id as described by g_desktop_app_info_new(),
- *            such as "transmission-gtk.desktop"
- *
- * Creates a new #SyncClient object. Applications wanting to interact
- * with the Sync Indicator should instantiate one of these and use it.
- *
- * The initial state is #SYNC_STATE_IDLE, unpaused, and with no menu.
- *
- * Returns (transfer full): a new SyncClient for the desktop id.
- *                          Free the returned object with g_object_unref().
- **/
 SyncClient * sync_client_new (const char * desktop_id);
 
-/**
- * sync_client_set_state:
- * @client : A #SyncClient object
- * @state : The #SyncState such as #SYNC_STATE_IDLE
- *
- * Sets the SyncClient's state property.
- **/
 void sync_client_set_state (SyncClient * client, SyncState state);
 
-/**
- * sync_client_set_state:
- * @client : A #SyncClient object
- * @paused : A boolean representing whether the client is paused or not
- *
- * Sets the SyncClient's paused property.
- **/
 void sync_client_set_paused (SyncClient * client, gboolean paused);
 
-/**
- * sync_client_set_menu:
- * @client : A #SyncClient object
- * @paused : A #DbusmenuServer of the menu to be exported by the #SyncClient
- *
- * Sets the SyncClient's menu.
- **/
 void sync_client_set_menu (SyncClient * client, DbusmenuServer * menu);
 
-/**
- * sync_client_get_state:
- * @client : A #SyncClient object
- *
- * Returns : the client's current #SyncState property, such as #SYNC_STATE_IDLE
- **/
 SyncState sync_client_get_state (SyncClient * client);
 
-/**
- * sync_client_get_state:
- * @client : A #SyncClient object
- *
- * Returns : the client's current 'paused' property.
- **/
 gboolean sync_client_get_paused (SyncClient * client);
 
-/**
- * sync_client_get_state:
- * @client : A #SyncClient object
- *
- * Returns (transfer none): the client's current #DbusmenuServer
- **/
 DbusmenuServer * sync_client_get_menu (SyncClient * client);
 
-/**
- * sync_client_get_desktop_id:
- * @client : A #SyncClient object
- *
- * Returns (transfer none): the client's desktop id
- **/
 const gchar * sync_client_get_desktop_id (SyncClient * client);
-
 
 /**
  * SYNC_PROGRESS_MENUITEM_TYPE:
