@@ -387,7 +387,7 @@ on_service_manager_connection_changed (IndicatorServiceManager  * sm,
 
 static int aligned_left_margin = 0;
 
-/**
+/*
  * This ugly little hack aligns the SyncClient's exported GtkMenuItems'
  * text with the AppMenuItem's GtkMenuItem text.
  *

@@ -278,9 +278,9 @@ on_menuitem_activated (AppMenuItem * self, guint timestamp, gpointer data)
     }
 }
 
-/**
-***
-**/
+/*
+**
+*/
 
 const gchar *
 app_menu_item_get_name (AppMenuItem * appitem)
@@ -307,9 +307,9 @@ app_menu_item_get_name (AppMenuItem * appitem)
   return name;
 }
 
-/**
-***
-**/
+/*
+**
+*/
 
 static gchar*
 get_iconstr (const gchar * desktop_filename, GAppInfo * appinfo)

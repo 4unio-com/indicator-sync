@@ -25,6 +25,14 @@
 
 G_BEGIN_DECLS
 
+/**
+ * SyncState:
+ * @SYNC_STATE_IDLE:    The sync client is not active and has no errors.
+ * @SYNC_STATE_SYNCING: The sync client is actively synchronizing.
+ * @SYNC_STATE_ERROR:   The sync client has encountered an error that stopped activity.
+ *
+ * Enum values used for the thing, to specify the thing.
+ */
 typedef enum
   {
     SYNC_STATE_IDLE,

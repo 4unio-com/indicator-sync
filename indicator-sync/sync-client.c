@@ -287,18 +287,18 @@ sync_client_init (SyncClient * client)
     }
 }
 
-/*
+/**
  * sync_client_new:
- * @desktop: A desktop id as described by g_desktop_app_info_new(),
- *           such as "transmission-gtk.desktop"
+ * @desktop_id: A desktop id as described by g_desktop_app_info_new(),
+ *              such as "transmission-gtk.desktop"
  *
  * Creates a new #SyncClient object. Applications wanting to interact
  * with the Sync Indicator should instantiate one of these and use it.
  *
  * The initial state is %SYNC_STATE_IDLE, unpaused, and with no menu.
  *
- * @Returns (transfer full): a new SyncClient for the desktop id.
- *                           Free the returned object with g_object_unref().
+ * Returns: transfer full: a new SyncClient for the desktop id.
+ *                         Free the returned object with g_object_unref().
  */
 SyncClient *
 sync_client_new (const char * desktop_id)
@@ -391,11 +391,11 @@ set_property (GObject       * o,
     }
 }
 
-/*
+/**
  * sync_client_get_paused:
  * @client: a #SyncClient
  *
- * @Returns: the client's current 'paused' property.
+ * Returns: the client's current 'paused' property.
  */
 gboolean
 sync_client_get_paused (SyncClient * client)
@@ -409,7 +409,7 @@ sync_client_get_paused (SyncClient * client)
  * sync_client_get_state:
  * @client: a #SyncClient
  *
- * @Returns: the client's current #SyncState, such as %SYNC_STATE_IDLE
+ * Returns: the client's current #SyncState, such as %SYNC_STATE_IDLE
  */
 SyncState
 sync_client_get_state (SyncClient * client)
@@ -419,11 +419,11 @@ sync_client_get_state (SyncClient * client)
   return client->priv->state;
 }
 
-/*
+/**
  * sync_client_get_desktop_id:
  * @client: a #SyncClient
  *
- * @Returns (transfer none): the client's desktop id
+ * Returns: (transfer none): the client's desktop id
  */
 const gchar*
 sync_client_get_desktop_id (SyncClient * client)
@@ -433,11 +433,11 @@ sync_client_get_desktop_id (SyncClient * client)
   return client->priv->desktop_id;
 }
 
-/*
+/**
  * sync_client_get_menu:
  * @client: a #SyncClient
  *
- * @Returns (transfer none): the client's #DbusmenuServer
+ * Returns: (transfer none): the client's #DbusmenuServer
  */
 DbusmenuServer*
 sync_client_get_menu (SyncClient * client)
@@ -447,7 +447,7 @@ sync_client_get_menu (SyncClient * client)
   return client->priv->menu_server;
 }
 
-/*
+/**
  * sync_client_set_paused:
  * @client: a #SyncClient
  * @paused: a boolean of whether or not the client is paused
@@ -462,7 +462,7 @@ sync_client_set_paused (SyncClient * client, gboolean paused)
   g_object_set (client, SYNC_CLIENT_PROP_PAUSED, paused, NULL);
 }
 
-/*
+/**
  * sync_client_set_state:
  * @client: a #SyncClient
  * @state: the client's new #SyncState, such as %SYNC_STATE_IDLE
@@ -477,12 +477,12 @@ sync_client_set_state (SyncClient * client, SyncState state)
   g_object_set (client, SYNC_CLIENT_PROP_STATE, state, NULL);
 }
 
-/*
+/**
  * sync_client_set_menu:
  * @client: a #SyncClient
  * @menu_server: a #DbusmenuServer of the menu to be exported by the #SyncClient
  *
- * Sets the client's SyncClient:menu property specifying which menu
+ * Sets the client's SyncClient:menu-path property specifying which menu
  * to export to the sync indicator.
  */
 void

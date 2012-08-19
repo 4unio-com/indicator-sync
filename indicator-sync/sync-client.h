@@ -82,7 +82,7 @@ void sync_client_set_state (SyncClient * client, SyncState state);
 
 void sync_client_set_paused (SyncClient * client, gboolean paused);
 
-void sync_client_set_menu (SyncClient * client, DbusmenuServer * menu);
+void sync_client_set_menu (SyncClient * client, DbusmenuServer * menu_server);
 
 SyncState sync_client_get_state (SyncClient * client);
 
@@ -95,7 +95,7 @@ const gchar * sync_client_get_desktop_id (SyncClient * client);
 /**
  * SYNC_PROGRESS_MENUITEM_TYPE:
  *
- * A value for #DBUSMENU_MENUITEM_PROP_TYPE to create a #DbusmenuMenuitem
+ * A value for %DBUSMENU_MENUITEM_PROP_TYPE to create a #DbusmenuMenuitem
  * that represents some task that has a progress state associated with it.
  * For example, this could be used for showing a file while it's in the
  * process of being synchronized.
@@ -107,7 +107,7 @@ const gchar * sync_client_get_desktop_id (SyncClient * client);
  *
  * #DbusmenuMenuitem property that says what percent done this item is.
  * Should be an integer in the range [0..100]
- * Type: #G_VARIANT_TYPE_INT32
+ * Type: %G_VARIANT_TYPE_INT32
  */
 #define SYNC_PROGRESS_MENUITEM_PROP_PERCENT_DONE  "percent-done"
 
