@@ -133,8 +133,8 @@ indicator_sync_init (IndicatorSync *self)
 
   /* init the entry */
   self->entry.label = NULL; /* no label */
-  self->entry.image = indicator_image_helper (calculate_icon_name (self));
-  self->entry.menu = GTK_MENU (menu);
+  self->entry.image = g_object_ref_sink (indicator_image_helper (calculate_icon_name (self)));
+  self->entry.menu = g_object_ref_sink (menu);
   self->entry.name_hint = PACKAGE;
   self->entry.accessible_desc = NULL;
   gtk_widget_show (GTK_WIDGET(self->entry.image));
@@ -155,6 +155,8 @@ indicator_sync_dispose (GObject *object)
 
   g_clear_object (&self->sync_service_proxy);
   g_clear_object (&self->service_manager);
+  g_clear_object (&self->entry.image);
+  g_clear_object (&self->entry.menu);
 
   G_OBJECT_CLASS (indicator_sync_parent_class)->dispose (object);
 }
