@@ -1,0 +1,1 @@
+SUBDIRS = libindicator-sync-client
