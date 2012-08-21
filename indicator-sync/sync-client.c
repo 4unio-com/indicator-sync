@@ -41,6 +41,7 @@ struct _SyncClientPriv
   guint             signal_subscription;
   DbusSyncClient  * skeleton;
   DbusmenuServer  * menu_server;
+  GBinding        * menu_binding;
   gchar           * desktop_id;
   SyncState         state;
   gboolean          paused;
@@ -368,11 +369,15 @@ set_property (GObject       * o,
   switch (prop_id)
     {
       case PROP_STATE:
-        p->state = g_value_get_enum (value);
+        sync_client_set_state (client, g_value_get_enum(value));
         break;
 
       case PROP_PAUSED:
-        p->paused = g_value_get_boolean (value);
+        sync_client_set_paused (client, g_value_get_boolean (value));
+        break;
+
+      case PROP_DBUSMENU:
+        sync_client_set_menu (client, DBUSMENU_SERVER(g_value_get_object(value)));
         break;
 
       case PROP_DESKTOP_ID:
@@ -381,14 +386,6 @@ set_property (GObject       * o,
         g_debug (G_STRLOC" setting desktop_id to '%s'", p->desktop_id);
         dbus_sync_client_set_desktop (p->skeleton, p->desktop_id);
         export_if_ready (client);
-        break;
-
-      case PROP_DBUSMENU:
-        g_clear_object (&p->menu_server);
-        p->menu_server = g_object_ref (g_value_get_object(value));
-        g_object_bind_property (p->menu_server, DBUSMENU_SERVER_PROP_DBUS_OBJECT,
-                                p->skeleton, "menu-path",
-                                G_BINDING_SYNC_CREATE);
         break;
 
       default:
@@ -464,8 +461,13 @@ void
 sync_client_set_paused (SyncClient * client, gboolean paused)
 {
   g_return_if_fail (IS_SYNC_CLIENT(client));
+  SyncClientPriv * p = client->priv;
 
-  g_object_set (client, SYNC_CLIENT_PROP_PAUSED, paused, NULL);
+  if (p->paused != paused)
+    {
+      p->paused = paused;
+      g_object_notify_by_pspec (G_OBJECT(client), properties[PROP_PAUSED]);
+    }
 }
 
 /**
@@ -479,8 +481,13 @@ void
 sync_client_set_state (SyncClient * client, SyncState state)
 {
   g_return_if_fail (IS_SYNC_CLIENT(client));
+  SyncClientPriv * p = client->priv;
 
-  g_object_set (client, SYNC_CLIENT_PROP_STATE, state, NULL);
+  if (p->state != state)
+    {
+      p->state = state;
+      g_object_notify_by_pspec (G_OBJECT(client), properties[PROP_STATE]);
+    }
 }
 
 /**
@@ -495,6 +502,22 @@ void
 sync_client_set_menu (SyncClient * client, DbusmenuServer * menu_server)
 {
   g_return_if_fail (IS_SYNC_CLIENT(client));
+  SyncClientPriv * p = client->priv;
 
-  g_object_set (client, SYNC_CLIENT_PROP_DBUSMENU, menu_server, NULL);
+  if (p->menu_server != menu_server)
+    {
+      g_clear_object (&p->menu_binding);
+      g_clear_object (&p->menu_server);
+
+      if (menu_server != NULL)
+        {
+          p->menu_server = g_object_ref (menu_server);
+          p->menu_binding = g_object_bind_property (
+                               p->menu_server, DBUSMENU_SERVER_PROP_DBUS_OBJECT,
+                               p->skeleton, "menu-path",
+                               G_BINDING_SYNC_CREATE);
+        }
+
+      g_object_notify_by_pspec (G_OBJECT(client), properties[PROP_DBUSMENU]);
+    }
 }
