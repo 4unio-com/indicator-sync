@@ -608,9 +608,6 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
                                        service,
                                        NULL); /* destroy notify */
 
-      /* emit a signal to tell already-running SyncClients that we're here */
-      dbus_sync_service_emit_exists (service->skeleton);
-
       /* cleanup */
       g_object_unref (connection);
     }

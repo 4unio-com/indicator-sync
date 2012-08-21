@@ -15,10 +15,5 @@
       <!-- true if any SyncClient is paused -->
       <property name="Paused" type="b" access="read" />
 
-    <!-- Signals -->
-
-      <!-- Emitted on startup to notify SyncClients of our existence -->
-      <signal name="Exists"/>
-
   </interface>
 </node>

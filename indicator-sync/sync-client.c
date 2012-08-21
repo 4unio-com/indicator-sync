@@ -36,6 +36,7 @@
 
 struct _SyncClientPriv
 {
+  guint             watch_id;
   GDBusConnection * session_bus;
   guint             signal_subscription;
   DbusSyncClient  * skeleton;
@@ -144,6 +145,12 @@ sync_client_dispose (GObject *object)
       g_clear_object (&p->cancellable);
     }
 
+  if (p->watch_id != 0 )
+    {
+      g_bus_unwatch_name (p->watch_id);
+      p->watch_id = 0;
+    }
+
   g_clear_object (&p->session_bus);
   g_clear_object (&p->skeleton);
 
@@ -220,20 +227,23 @@ export_if_ready (SyncClient * client)
     }
 }
 
-/* a sync service was created, let's tell it that we're here */
 static void
-on_sync_service_exists (GDBusConnection * connection  G_GNUC_UNUSED,
-                        const gchar     * sender      G_GNUC_UNUSED,
-                        const gchar     * object      G_GNUC_UNUSED,
-                        const gchar     * interface   G_GNUC_UNUSED,
-                        const gchar     * signal      G_GNUC_UNUSED,
-                        GVariant        * params      G_GNUC_UNUSED,
-                        gpointer          user_data)
+on_sync_service_name_appeared (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
+{
+  export_if_ready (SYNC_CLIENT(user_data));
+}
+
+static void
+on_sync_service_name_vanished (GDBusConnection * connection, const gchar * name, gpointer user_data)
 {
   SyncClient * client = SYNC_CLIENT(user_data);
-  g_return_if_fail (client != NULL);
+  SyncClientPriv * p = client->priv;
+  GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
 
-  dbus_sync_client_emit_exists (client->priv->skeleton);
+  if (g_dbus_interface_skeleton_has_connection (s, p->session_bus))
+    {
+      g_dbus_interface_skeleton_unexport (s);
+    }
 }
 
 static void
@@ -251,19 +261,12 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
     }
   else
     {
-      /* look for SyncService to show up on the bus */
-      p->signal_subscription = g_dbus_connection_signal_subscribe (
-                                 p->session_bus,
-                                 NULL, /* sender */
-                                 SYNC_SERVICE_DBUS_IFACE,
-                                 "Exists",
-                                 NULL, /* path */
-                                 NULL, /* arg0 */
-                                 G_DBUS_SIGNAL_FLAGS_NONE,
-                                 on_sync_service_exists,
-                                 client,
-                                 NULL); /* destroy notify */
-
+      p->watch_id = g_bus_watch_name_on_connection (p->session_bus,
+                                                    SYNC_SERVICE_DBUS_NAME,
+                                                    G_BUS_NAME_WATCHER_FLAGS_AUTO_START,
+                                                    on_sync_service_name_appeared,
+                                                    on_sync_service_name_vanished,
+                                                    client, NULL);
       export_if_ready (client);
     }
 }
