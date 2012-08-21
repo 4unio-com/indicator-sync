@@ -96,7 +96,6 @@ static void
 app_menu_item_dispose (GObject *object)
 {
   AppMenuItem * self = APP_MENU_ITEM(object);
-  g_return_if_fail (self != NULL);
   AppMenuItemPriv * p = self->priv;
 
   g_clear_object (&p->appinfo);
@@ -117,7 +116,6 @@ static void
 app_menu_item_finalize (GObject *object)
 {
   AppMenuItem * self = APP_MENU_ITEM(object);
-  g_return_if_fail (self != NULL);
   AppMenuItemPriv * p = self->priv;
 
   g_clear_pointer (&p->desktop, g_free);
@@ -245,7 +243,6 @@ on_client_state_changed (GObject    * o          G_GNUC_UNUSED,
                          gpointer     user_data)
 {
   AppMenuItem * self = APP_MENU_ITEM(user_data);
-  g_return_if_fail (self != NULL);
 
   update_label (self);
 }
@@ -256,7 +253,6 @@ on_client_paused_changed (GObject    * o          G_GNUC_UNUSED,
                           gpointer     user_data)
 {
   AppMenuItem * self = APP_MENU_ITEM(user_data);
-  g_return_if_fail (self != NULL);
 
   update_label (self);
   update_checked (self);
@@ -267,7 +263,6 @@ on_menuitem_activated (AppMenuItem * self, guint timestamp, gpointer data)
 {
   DbusmenuMenuitem * mi = DBUSMENU_MENUITEM(self);
   DbusSyncClient * sync_client = DBUS_SYNC_CLIENT(self->priv->sync_client);
-  g_return_if_fail (sync_client != NULL);
 
   /* update the menuitem's state */
   const gint old_checked = dbusmenu_menuitem_property_get_int (mi, PROP_TOGGLE);
