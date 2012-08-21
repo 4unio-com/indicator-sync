@@ -161,12 +161,12 @@ create_u1_sync_client (void)
 
   const gchar * filenames[] =
   {
-    "ubuntu-12.04-alternate-amd64.iso",
-    "ubuntu-12.04-alternate-i386.iso",
-    "ubuntu-12.04-desktop-amd64.iso",
-    "ubuntu-12.04-desktop-i386.iso",
-    "ubuntu-12.04-server-amd64.iso",
-    "ubuntu-12.04-server-i386.iso"
+    "ubuntu-12.10-alternate-amd64.iso",
+    "ubuntu-12.10-alternate-i386.iso",
+    "ubuntu-12.10-desktop-amd64.iso",
+    "ubuntu-12.10-desktop-i386.iso",
+    "ubuntu-12.10-server-amd64.iso",
+    "ubuntu-12.10-server-i386.iso"
   };
   const int n = G_N_ELEMENTS(filenames);
 
