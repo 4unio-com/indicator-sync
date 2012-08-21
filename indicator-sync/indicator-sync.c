@@ -156,7 +156,12 @@ indicator_sync_dispose (GObject *object)
   g_clear_object (&self->sync_service_proxy);
   g_clear_object (&self->service_manager);
   g_clear_object (&self->entry.image);
-  g_clear_object (&self->entry.menu);
+
+  if (self->entry.menu)
+    {
+      self->menu_client = NULL;
+      g_clear_object (&self->entry.menu);
+    }
 
   G_OBJECT_CLASS (indicator_sync_parent_class)->dispose (object);
 }
