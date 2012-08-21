@@ -18,7 +18,7 @@ endif
 
 
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-deprecations --enable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-deprecations --enable-gtk-doc --enable-introspection
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.bzr"; \

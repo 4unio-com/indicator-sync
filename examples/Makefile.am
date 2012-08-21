@@ -13,10 +13,5 @@ sync_client_demo_LDADD = \
   $(top_builddir)/indicator-sync/libindicator-sync-client.la \
   $(SYNC_CLIENT_LIBS)
 
-python_demos = \
-  sync-client-demo.py
-
 examplesdir = $(docdir)/examples/
-
-EXTRA_DIST = $(python_examples)
 

@@ -26,6 +26,22 @@ AC_PATH_PROG([GLIB_MKENUMS], [glib-mkenums])
 # the Google Test targets are cpp
 AC_PROG_CXX
 
+
+###########################
+# GObject Introspection
+###########################
+
+AC_MSG_CHECKING([for gobject-introspection m4 macros])
+m4_ifdef([GOBJECT_INTROSPECTION_CHECK], , AC_MSG_FAILURE([failed. Please install the package 'gobject-introspection' in order to compile]))
+AC_MSG_RESULT([yes])
+
+GOBJECT_INTROSPECTION_CHECK([0.10.0])
+
+GIR_MAJOR=1
+GIR_MINOR=0
+AC_SUBST([GIR_VERSION],[$GIR_MAJOR.$GIR_MINOR])
+AC_DEFINE_UNQUOTED(GIR_VERSION, [$GIR_VERSION], [GIR version])
+
 ###########################
 # Dependencies 
 ###########################
@@ -142,46 +158,6 @@ AC_DEFUN([AC_DEFINE_PATH], [
 		AC_DEFINE_UNQUOTED($1, "$ac_define_path"),
 		AC_DEFINE_UNQUOTED($1, "$ac_define_path", $3))
 ])
-
-###########################
-# Check for Python support
-###########################
-
-AC_ARG_ENABLE([python],
-        AC_HELP_STRING([--disable-python], [Disable Python bindings generation]),
-        [enable_python=$enableval], [enable_python=auto])
-AM_CONDITIONAL([WANT_PYTHON], [test "x$enable_python" != "xno"])
-
-AS_IF([test "x$enable_python" != "xno"],[
-
-	PYTHON_REQUIRED=2.3.5
-	PYGTK_REQUIRED=2.14.0
-	PYGOBJECT_REQUIRED=0.22
-
-	AM_PATH_PYTHON([$PYTHON_REQUIRED])
-	AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
-	PKG_CHECK_MODULES([SYNC_PYTHON],[python-$PYTHON_VERSION >= $PYTHON_REQUIRED
-					 pygtk-2.0 >= $PYGTK_REQUIRED
-					 pygobject-2.0 >= $PYGOBJECT_REQUIRED],
-					[have_python=yes])
-
-	# libpyglib-2.0-python* doesn't have a pkgconfig unfortunately
-	SYNC_PYTHON_LIBS+=" -lpyglib-2.0-python$PYTHON_VERSION"
-
-	AC_SUBST(SYNC_PYTHON_CFLAGS)
-	AC_SUBST(SYNC_PYTHON_LIBS)
-
-	AC_MSG_CHECKING(for pygtk defs)
-	PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
-	AC_SUBST(PYGTK_DEFSDIR)
-	AC_MSG_RESULT($PYGTK_DEFSDIR)
-
-	AC_MSG_CHECKING(for pygtk codegen)
-	PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
-	AC_SUBST(PYGTK_CODEGEN)
-	AC_MSG_RESULT($PYGTK_CODEGEN)
-])
-
 
 ###########################
 # Internationalization
