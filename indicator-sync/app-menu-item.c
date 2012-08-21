@@ -161,7 +161,7 @@ app_menu_item_new (GDBusProxy * sync_client)
   update_label (self);
   update_checked (self);
 
-  g_signal_connect (G_OBJECT(self), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  g_signal_connect (self, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK(on_menuitem_activated), NULL);
 
   return self;
