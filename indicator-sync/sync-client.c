@@ -38,19 +38,11 @@ struct _SyncClientPriv
 {
   GDBusConnection * session_bus;
   guint             signal_subscription;
-
   DbusSyncClient  * skeleton;
-
   DbusmenuServer  * menu_server;
-  GBinding        * menu_binding;
-
   gchar           * desktop_id;
-
   SyncState         state;
-  GBinding        * state_binding;
-
   gboolean          paused;
-  GBinding        * paused_binding;
 };
 
 enum
@@ -145,8 +137,6 @@ sync_client_dispose (GObject *object)
         }
     }
 
-  g_clear_object (&p->state_binding);
-  g_clear_object (&p->paused_binding);
   g_clear_object (&p->session_bus);
   g_clear_object (&p->skeleton);
 
@@ -253,15 +243,13 @@ sync_client_init (SyncClient * client)
   p->skeleton = dbus_sync_client_skeleton_new ();
   p->state = SYNC_STATE_IDLE;
 
-  p->paused_binding = g_object_bind_property (
-                        client,      SYNC_CLIENT_PROP_PAUSED,
-                        p->skeleton, SYNC_CLIENT_PROP_PAUSED,
-                        G_BINDING_BIDIRECTIONAL|G_BINDING_SYNC_CREATE);
+  g_object_bind_property (client,      SYNC_CLIENT_PROP_PAUSED,
+                          p->skeleton, SYNC_CLIENT_PROP_PAUSED,
+                          G_BINDING_BIDIRECTIONAL|G_BINDING_SYNC_CREATE);
 
-  p->state_binding = g_object_bind_property (
-                       client,      SYNC_CLIENT_PROP_STATE,
-                       p->skeleton, SYNC_CLIENT_PROP_STATE,
-                       G_BINDING_SYNC_CREATE);
+  g_object_bind_property (client,      SYNC_CLIENT_PROP_STATE,
+                          p->skeleton, SYNC_CLIENT_PROP_STATE,
+                          G_BINDING_SYNC_CREATE);
 
   GError * err = NULL;
   p->session_bus = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &err);
@@ -374,15 +362,11 @@ set_property (GObject       * o,
         break;
 
       case PROP_DBUSMENU:
-        g_clear_object (&p->menu_binding);
         g_clear_object (&p->menu_server);
         p->menu_server = g_object_ref (g_value_get_object(value));
-        p->menu_binding = g_object_bind_property (
-                                            p->menu_server,
-                                            DBUSMENU_SERVER_PROP_DBUS_OBJECT,
-                                            p->skeleton,
-                                            "menu-path",
-                                            G_BINDING_SYNC_CREATE);
+        g_object_bind_property (p->menu_server, DBUSMENU_SERVER_PROP_DBUS_OBJECT,
+                                p->skeleton, "menu-path",
+                                G_BINDING_SYNC_CREATE);
         break;
 
       default:
