@@ -33,7 +33,6 @@
 
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-object.h>
-#include <libindicator/indicator-image-helper.h>
 #include <libindicator/indicator-service-manager.h>
 
 #include "dbus-shared.h"
@@ -133,7 +132,7 @@ indicator_sync_init (IndicatorSync *self)
 
   /* init the entry */
   self->entry.label = NULL; /* no label */
-  self->entry.image = g_object_ref_sink (indicator_image_helper (calculate_icon_name (self)));
+  self->entry.image = g_object_ref_sink (gtk_image_new_from_icon_name (calculate_icon_name (self), GTK_ICON_SIZE_MENU));
   self->entry.menu = g_object_ref_sink (menu);
   self->entry.name_hint = PACKAGE;
   self->entry.accessible_desc = NULL;
@@ -289,13 +288,7 @@ update_icon (IndicatorSync * self)
 
   const gchar * const icon_name = calculate_icon_name (self);
   g_debug (G_STRLOC" setting icon to '%s'", icon_name);
-  indicator_image_helper_update (self->entry.image, icon_name);
-
-  if (gtk_image_get_storage_type (GTK_IMAGE(self->entry.image)) == GTK_IMAGE_EMPTY)
-    {
-      g_warning (G_STRLOC" named icon '%s' not found; using gtk-missing-image", icon_name);
-      indicator_image_helper_update (self->entry.image, GTK_STOCK_MISSING_IMAGE);
-    }
+  gtk_image_set_from_icon_name (GTK_IMAGE(self->entry.image), icon_name, GTK_ICON_SIZE_MENU);
 }
 
 static void
@@ -468,7 +461,7 @@ app_update_icon (DbusmenuMenuitem * mi, struct AppWidgets * w)
 {
   const gchar * icon_name = dbusmenu_menuitem_property_get (mi, APPLICATION_MENUITEM_PROP_ICON);
 
-  indicator_image_helper_update (GTK_IMAGE(w->icon), icon_name);
+  gtk_image_set_from_icon_name (GTK_IMAGE(w->icon), icon_name, GTK_ICON_SIZE_MENU);
 }
 
 static void
