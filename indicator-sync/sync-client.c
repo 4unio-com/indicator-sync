@@ -93,28 +93,28 @@ sync_client_class_init (SyncClientClass * klass)
     "The SyncState that represents this client's state",
     sync_state_get_type(),
     SYNC_STATE_IDLE,
-    G_PARAM_READABLE|G_PARAM_WRITABLE);
+    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_PAUSED] = g_param_spec_boolean (
     SYNC_CLIENT_PROP_PAUSED,
     "Paused",
     "Whether or not this client is paused",
     FALSE,
-    G_PARAM_READABLE|G_PARAM_WRITABLE);
+    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_DESKTOP_ID] = g_param_spec_string (
     SYNC_CLIENT_PROP_DESKTOP_ID,
     "Desktop Id",
     "The name of the .desktop file that belongs to the client app",
     NULL,
-    G_PARAM_READABLE|G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY);
+    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_DBUSMENU] = g_param_spec_object (
     SYNC_CLIENT_PROP_DBUSMENU,
     "MenuItems",
     "The extra menuitems to display in the client's section in the Sync Indicator",
     DBUSMENU_TYPE_SERVER,
-    G_PARAM_READABLE|G_PARAM_WRITABLE);
+    G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 }

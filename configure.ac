@@ -1,9 +1,9 @@
-AC_INIT(indicator-sync/sync-service.c)
+AC_INIT(indicator-sync, 12.10.0)
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-sync, 12.10.0)
+AM_INIT_AUTOMAKE()
 
 AM_MAINTAINER_MODE
 

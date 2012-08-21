@@ -44,7 +44,7 @@ typedef struct _SyncMenuClient SyncMenuClient;
 #define IS_SYNC_CLIENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), SYNC_CLIENT_TYPE))
 #define SYNC_CLIENT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), SYNC_CLIENT_TYPE, SyncClientClass))
 
-#define SYNC_CLIENT_PROP_DESKTOP_ID  "desktop_id"
+#define SYNC_CLIENT_PROP_DESKTOP_ID  "desktop-id"
 #define SYNC_CLIENT_PROP_STATE       "state"
 #define SYNC_CLIENT_PROP_PAUSED      "paused"
 #define SYNC_CLIENT_PROP_DBUSMENU    "dbusmenu"

@@ -100,7 +100,15 @@ app_menu_item_dispose (GObject *object)
   AppMenuItemPriv * p = self->priv;
 
   g_clear_object (&p->appinfo);
-  g_clear_object (&p->sync_client);
+
+  g_signal_handlers_disconnect_by_func (self, on_menuitem_activated, NULL);
+
+  if (p->sync_client)
+    {
+      g_signal_handlers_disconnect_by_func (p->sync_client, on_client_state_changed, self);
+      g_signal_handlers_disconnect_by_func (p->sync_client, on_client_paused_changed, self);
+      g_clear_object (&p->sync_client);
+    }
 
   G_OBJECT_CLASS (app_menu_item_parent_class)->dispose (object);
 }
@@ -153,7 +161,7 @@ app_menu_item_new (GDBusProxy * sync_client)
   update_label (self);
   update_checked (self);
 
-  g_signal_connect (G_OBJECT(self), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  g_signal_connect (self, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK(on_menuitem_activated), NULL);
 
   return self;
