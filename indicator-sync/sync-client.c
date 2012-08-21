@@ -43,6 +43,7 @@ struct _SyncClientPriv
   gchar           * desktop_id;
   SyncState         state;
   gboolean          paused;
+  GCancellable    * cancellable;
 };
 
 enum
@@ -135,6 +136,12 @@ sync_client_dispose (GObject *object)
         {
           g_dbus_interface_skeleton_unexport (s);
         }
+    }
+
+  if (p->cancellable != NULL)
+    {
+      g_cancellable_cancel (p->cancellable);
+      g_clear_object (&p->cancellable);
     }
 
   g_clear_object (&p->session_bus);
@@ -230,29 +237,13 @@ on_sync_service_exists (GDBusConnection * connection  G_GNUC_UNUSED,
 }
 
 static void
-sync_client_init (SyncClient * client)
+on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 {
-  SyncClientPriv * p;
-
-  p = G_TYPE_INSTANCE_GET_PRIVATE (client, SYNC_CLIENT_TYPE, SyncClientPriv);
-  client->priv = p;
-
-  p->paused = FALSE;
-  p->menu_server = NULL;
-  p->desktop_id = NULL;
-  p->skeleton = dbus_sync_client_skeleton_new ();
-  p->state = SYNC_STATE_IDLE;
-
-  g_object_bind_property (client,      SYNC_CLIENT_PROP_PAUSED,
-                          p->skeleton, SYNC_CLIENT_PROP_PAUSED,
-                          G_BINDING_BIDIRECTIONAL|G_BINDING_SYNC_CREATE);
-
-  g_object_bind_property (client,      SYNC_CLIENT_PROP_STATE,
-                          p->skeleton, SYNC_CLIENT_PROP_STATE,
-                          G_BINDING_SYNC_CREATE);
+  SyncClient * client = SYNC_CLIENT(user_data);
+  SyncClientPriv * p = client->priv;
 
   GError * err = NULL;
-  p->session_bus = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &err);
+  p->session_bus = g_bus_get_finish (res, &err);
   if (err != NULL)
     { 
       g_error ("unable to get bus: %s", err->message);
@@ -272,7 +263,35 @@ sync_client_init (SyncClient * client)
                                  on_sync_service_exists,
                                  client,
                                  NULL); /* destroy notify */
+
+      export_if_ready (client);
     }
+}
+
+static void
+sync_client_init (SyncClient * client)
+{
+  SyncClientPriv * p;
+
+  p = G_TYPE_INSTANCE_GET_PRIVATE (client, SYNC_CLIENT_TYPE, SyncClientPriv);
+  client->priv = p;
+
+  p->paused = FALSE;
+  p->menu_server = NULL;
+  p->desktop_id = NULL;
+  p->skeleton = dbus_sync_client_skeleton_new ();
+  p->state = SYNC_STATE_IDLE;
+  p->cancellable = g_cancellable_new();
+
+  g_object_bind_property (client,      SYNC_CLIENT_PROP_PAUSED,
+                          p->skeleton, SYNC_CLIENT_PROP_PAUSED,
+                          G_BINDING_BIDIRECTIONAL|G_BINDING_SYNC_CREATE);
+
+  g_object_bind_property (client,      SYNC_CLIENT_PROP_STATE,
+                          p->skeleton, SYNC_CLIENT_PROP_STATE,
+                          G_BINDING_SYNC_CREATE);
+
+  g_bus_get (G_BUS_TYPE_SESSION, p->cancellable, on_got_bus, client);
 }
 
 /**
