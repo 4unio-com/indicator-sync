@@ -1,0 +1,14 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+bindir=@bindir@
+includedir=@includedir@
+
+Requires: dbusmenu-glib-0.4 gobject-2.0
+
+Cflags: -I${includedir}/indicator-sync-source-0.@sync_source_api_version@
+Libs: -L${libdir} -lindicator-sync-source
+
+Name: indicator-sync-source
+Description: Simple interface for 3rd party apps to interact with the Sync Indicator
+Version: @VERSION@
