@@ -21,7 +21,6 @@ SHARED_CFLAGS = \
 # the client library
 ######################################
 
-SYNC_CLIENT_API_VERSION = 1
 SYNC_CLIENT_DIR = $(libexecdir)
 statusprovidersdir = $(SYNC_SOURCE_DIR)
 
@@ -70,14 +69,14 @@ libindicator_sync_clientinclude_HEADERS = \
 
 libindicator_sync_client_pcdir = $(libdir)/pkgconfig
 libindicator_sync_client_pc_DATA = \
-	indicator-sync-client-0.$(SYNC_CLIENT_API_VERSION).pc
+	indicator-sync-client-0.$(SYNC_CLIENT_CURRENT).pc
 CLEANFILES += $(libindicator_sync_client_pc_DATA)
 EXTRA_DIST += $(libindicator_sync_client_pc_DATA).in.in
 
 %.pc: %.pc.in
 	sed \
 		-e "s|\@sync_client_dir\@|$(SYNC_CLIENT_DIR)|" \
-		-e "s|\@sync_client_api_version\@|$(SYNC_CLIENT_API_VERSION)|" \
+		-e "s|\@sync_client_api_version\@|$(SYNC_CLIENT_CURRENT)|" \
 		$< > $@
 
 ######################################
