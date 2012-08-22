@@ -6,9 +6,9 @@ includedir=@includedir@
 
 Requires: dbusmenu-glib-0.4 gobject-2.0
 
-Cflags: -I${includedir}/indicator-sync-source-0.@sync_source_api_version@
-Libs: -L${libdir} -lindicator-sync-source
+Cflags: -I${includedir}/indicator-sync-client-0.@sync_client_api_version@
+Libs: -L${libdir} -lindicator-sync-client
 
-Name: indicator-sync-source
+Name: indicator-sync-client
 Description: Simple interface for 3rd party apps to interact with the Sync Indicator
 Version: @VERSION@
