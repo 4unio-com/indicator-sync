@@ -2,7 +2,6 @@
 SUBDIRS = \
 	indicator-sync \
 	data \
-	docs \
 	examples \
 	po
 
@@ -18,7 +17,7 @@ endif
 
 
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-deprecations --enable-gtk-doc --enable-introspection
+DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-deprecations --enable-introspection
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.bzr"; \

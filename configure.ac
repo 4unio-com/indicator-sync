@@ -79,8 +79,6 @@ PKG_CHECK_MODULES(SYNC_INDICATOR, [libido3-0.1          >= $IDO_REQUIRED_VERSION
 AC_SUBST(SYNC_INDICATOR_CFLAGS)
 AC_SUBST(SYNC_INDICATOR_LIBS)
 
-GTK_DOC_CHECK([1.18], [])
-
 ###########################
 # gcov coverage reporting
 ###########################
@@ -185,9 +183,6 @@ AC_OUTPUT([Makefile
            data/icons/Makefile
            data/icons/22x22/Makefile
            data/icons/22x22/status/Makefile
-           docs/Makefile
-           docs/reference/Makefile
-           docs/reference/libindicator-sync-client/Makefile
            examples/Makefile
            test/Makefile
            po/Makefile.in])

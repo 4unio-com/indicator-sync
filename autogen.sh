@@ -2,8 +2,6 @@
 
 PKG_NAME="indicator-sync"
 
-gtkdocize || exit 1
-
 which gnome-autogen.sh || {
 	echo "You need gnome-common from GNOME SVN"
 	exit 1
