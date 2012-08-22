@@ -28,6 +28,17 @@ AC_PROG_CXX
 
 
 ###########################
+# libindicator-sync-client versioning 
+###########################
+
+SYNC_CLIENT_CURRENT=1
+SYNC_CLIENT_REVISION=0
+SYNC_CLIENT_AGE=0
+AC_SUBST(SYNC_CLIENT_CURRENT)
+AC_SUBST(SYNC_CLIENT_REVISION)
+AC_SUBST(SYNC_CLIENT_AGE)
+
+###########################
 # GObject Introspection
 ###########################
 

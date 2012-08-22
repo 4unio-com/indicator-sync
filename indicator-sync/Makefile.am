@@ -5,8 +5,7 @@ EXTRA_DIST =
 lib_LTLIBRARIES =
 
 SHARED_LDFLAGS = \
-  $(COVERAGE_LDFLAGS) \
-  -module -avoid-version
+  $(COVERAGE_LDFLAGS)
 
 SHARED_CFLAGS = \
   -I$(srcdir)/.. \
@@ -58,6 +57,7 @@ libindicator_sync_client_la_CFLAGS = \
   $(SHARED_CFLAGS)
 
 libindicator_sync_client_la_LDFLAGS = \
+  -version-info $(SYNC_CLIENT_CURRENT):$(SYNC_CLIENT_REVISION):$(SYNC_CLIENT_AGE) \
   $(SYNC_CLIENT_LIBS) \
   $(SHARED_LDFLAGS)
 
@@ -163,6 +163,7 @@ libsyncindicator_la_CFLAGS = \
 libsyncindicator_la_LIBADD = \
 	$(SYNC_INDICATOR_LIBS)
 libsyncindicator_la_LDFLAGS = \
+	-module -avoid-version \
 	$(SHARED_LDFLAGS)
 
 ######################################
