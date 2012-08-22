@@ -132,7 +132,7 @@ indicator_sync_init (IndicatorSync *self)
 
   /* init the entry */
   self->entry.label = NULL; /* no label */
-  self->entry.image = g_object_ref_sink (gtk_image_new_from_icon_name (calculate_icon_name (self), GTK_ICON_SIZE_MENU));
+  self->entry.image = g_object_ref_sink (gtk_image_new_from_icon_name (calculate_icon_name (self), GTK_ICON_SIZE_BUTTON));
   self->entry.menu = g_object_ref_sink (menu);
   self->entry.name_hint = PACKAGE;
   self->entry.accessible_desc = NULL;
