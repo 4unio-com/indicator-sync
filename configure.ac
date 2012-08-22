@@ -178,7 +178,7 @@ AM_CONDITIONAL([HAS_PYTHON], [test "x$have_python" = "xyes"])
 
 AC_OUTPUT([Makefile
            indicator-sync/Makefile
-           indicator-sync/indicator-sync-client3-0.1.pc.in
+           indicator-sync/indicator-sync-client-0.1.pc.in
            data/Makefile
            data/icons/Makefile
            data/icons/22x22/Makefile
