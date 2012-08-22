@@ -3,6 +3,7 @@ DISTCLEANFILES =
 BUILT_SOURCES =
 EXTRA_DIST =
 lib_LTLIBRARIES =
+VER = 3
 
 SHARED_LDFLAGS = \
   $(COVERAGE_LDFLAGS) \
@@ -68,11 +69,11 @@ libindicator_sync_clientinclude_HEADERS = \
   sync-client.h \
   sync-enum.h
 
-EXTRA_DIST += indicator-sync-client.pc.in.in
-CLEANFILES += indicator-sync-client.pc
-
-pkgconfig_DATA = indicator-sync-client.pc
-pkgconfigdir = $(libdir)/pkgconfig
+libindicator_sync_client_pcdir = $(libdir)/pkgconfig
+libindicator_sync_client_pc_DATA = \
+	indicator-sync-client$(VER)-0.$(SYNC_CLIENT_API_VERSION).pc
+CLEANFILES += $(libindicator_sync_client_pc_DATA)
+EXTRA_DIST += $(libindicator_sync_client_pc_DATA).in.in
 
 %.pc: %.pc.in
 	sed \
