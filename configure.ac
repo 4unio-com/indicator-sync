@@ -46,6 +46,7 @@ AC_DEFINE_UNQUOTED(GIR_VERSION, [$GIR_VERSION], [GIR version])
 # Dependencies 
 ###########################
 
+IDO_REQUIRED_VERSION=12.10
 GTK_REQUIRED_VERSION=3.0
 GIO_UNIX_REQUIRED_VERSION=2.18
 PANEL_REQUIRED_VERSION=2.0.0
@@ -69,7 +70,8 @@ PKG_CHECK_MODULES(SYNC_SERVICE, [indicator3-0.4    >= $INDICATOR_REQUIRED_VERSIO
 AC_SUBST(SYNC_SERVICE_CFLAGS)
 AC_SUBST(SYNC_SERVICE_LIBS)
 
-PKG_CHECK_MODULES(SYNC_INDICATOR, [indicator3-0.4       >= $INDICATOR_REQUIRED_VERSION
+PKG_CHECK_MODULES(SYNC_INDICATOR, [libido3-0.1          >= $IDO_REQUIRED_VERSION
+                                   indicator3-0.4       >= $INDICATOR_REQUIRED_VERSION
                                    dbusmenu-gtk3-0.4    >= $DBUSMENUGTK_REQUIRED_VERSION
                                    gtk+-3.0             >= $GTK_REQUIRED_VERSION
                                    glib-2.0             >= $GLIB_REQUIRED_VERSION

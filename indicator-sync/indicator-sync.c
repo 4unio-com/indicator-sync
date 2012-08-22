@@ -35,6 +35,8 @@
 #include <libindicator/indicator-object.h>
 #include <libindicator/indicator-service-manager.h>
 
+#include <libido/idoswitchmenuitem.h>
+
 #include "dbus-shared.h"
 #include "sync-service-dbus.h"
 #include "sync-client.h"
@@ -517,7 +519,7 @@ new_item_app (DbusmenuMenuitem  * newitem,
 
   /* build the display widgets and initialize them */
   w = g_new0 (struct AppWidgets, 1);
-  w->gmi = gtk_check_menu_item_new();
+  w->gmi = ido_switch_menu_item_new ();
   w->icon = gtk_image_new ();
   w->label = gtk_label_new (NULL);
   app_update_icon  (newitem, w);
@@ -536,7 +538,7 @@ new_item_app (DbusmenuMenuitem  * newitem,
   gtk_box_pack_start (GTK_BOX (hbox), w->icon, FALSE, FALSE, 0);
   gtk_misc_set_alignment (GTK_MISC(w->label), 0.0, 0.5);
   gtk_box_pack_start (GTK_BOX(hbox), w->label, TRUE, TRUE, 0);
-  gtk_container_add (GTK_CONTAINER(w->gmi), hbox);
+  gtk_container_add (ido_switch_menu_item_get_content_area(IDO_SWITCH_MENU_ITEM(w->gmi)), hbox);
   gtk_widget_show_all (w->gmi);
 
   /* let dbusmenu attach its standard handlers */
@@ -645,7 +647,7 @@ new_item_prog (DbusmenuMenuitem  * newitem,
   w = g_new0 (struct ProgWidgets, 1);
   w->label = gtk_label_new (NULL);
   w->progress_bar = gtk_progress_bar_new ();
-  w->gmi = gtk_check_menu_item_new ();
+  w->gmi = gtk_menu_item_new ();
   prog_update_name (newitem, w);
   prog_update_percent (newitem, w);
 
