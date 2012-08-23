@@ -60,12 +60,11 @@ static void app_menu_item_finalize   (GObject *object);
 
 static void update_checked (AppMenuItem * self);
 static void update_label (AppMenuItem * self);
+static void update_icon (AppMenuItem * self);
 
 static void on_menuitem_activated (AppMenuItem * self, guint timestamp, gpointer data);
 static void on_client_state_changed (GObject * o, GParamSpec * pspec, gpointer user_data);
 static void on_client_paused_changed (GObject * o, GParamSpec * pspec, gpointer user_data);
-
-static gchar* get_iconstr (const gchar * desktop_filename, GAppInfo * appinfo);
 
 /***
 ****  GObject Boilerplate
@@ -149,13 +148,7 @@ app_menu_item_new (GDBusProxy * sync_client)
              ? G_APP_INFO (g_desktop_app_info_new_from_filename (desktop))
              : G_APP_INFO (g_desktop_app_info_new (desktop));
 
-  const gchar * filename = G_IS_DESKTOP_APP_INFO(p->appinfo)
-                         ? g_desktop_app_info_get_filename (G_DESKTOP_APP_INFO(p->appinfo))
-                         : NULL;
-  gchar * iconstr = get_iconstr (filename, p->appinfo);
-  dbusmenu_menuitem_property_set (mi, PROP_ICON, iconstr);
-  g_free (iconstr);
-
+  update_icon (self);
   update_label (self);
   update_checked (self);
 
@@ -314,32 +307,60 @@ app_menu_item_get_name (AppMenuItem * appitem)
 **
 */
 
-static gchar*
-get_iconstr (const gchar * desktop_filename, GAppInfo * appinfo)
+static void
+on_desktop_file_loaded (GObject * file, GAsyncResult * res, gpointer gself)
 {
-  gchar * iconstr = NULL;
-
-  if (iconstr == NULL)
+  gsize length = 0;
+  gchar * data = NULL;
+  gchar * icon_str = NULL;
+  AppMenuItem * self = APP_MENU_ITEM(gself);
+  
+  /* see if the .desktop file has an entry specifying its sync menu icon */
+  if (g_file_load_contents_finish (G_FILE(file), res, &data, &length, NULL, NULL))
     {
-      /* see if the .desktop file has an entry specifying its sync menu icon */
       GKeyFile * keyfile = g_key_file_new ();
-      g_key_file_load_from_file (keyfile, desktop_filename,
-                                 G_KEY_FILE_NONE, NULL);
-      iconstr = g_key_file_get_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
-                                       ICON_KEY, NULL);
+      g_key_file_load_from_data (keyfile, data, length, G_KEY_FILE_NONE, NULL);
+      icon_str = g_key_file_get_string (keyfile, G_KEY_FILE_DESKTOP_GROUP, ICON_KEY, NULL);
       g_key_file_free (keyfile);
     }
 
-  if (iconstr == NULL)
+  /* otherwise, use the appinfo's icon */
+  if (icon_str == NULL)
     {
-      GIcon * icon = g_app_info_get_icon (appinfo);
-      iconstr = g_icon_to_string (icon);
+      GIcon * icon = g_app_info_get_icon (self->priv->appinfo);
+      if (icon != NULL)
+        {
+          icon_str = g_icon_to_string (icon);
+        }
     }
 
-  if (iconstr == NULL)
+  /* otherwise, at least show /something/ ... */
+  if (icon_str == NULL)
     {
-      iconstr = g_strdup ("gtk-missing-image");
+      icon_str = g_strdup ("gtk-missing-image");
     }
 
-  return iconstr;
+  dbusmenu_menuitem_property_set (DBUSMENU_MENUITEM(self), PROP_ICON, icon_str);
+
+  /* cleanup */
+  g_free (data);
+  g_free (icon_str);
+  g_object_unref (G_OBJECT(self)); /* balance update_icon()'s ref */
+}
+
+static void
+update_icon (AppMenuItem * self)
+{
+  GFile * file = NULL;
+  const gchar * path = NULL;
+  AppMenuItemPriv * p = self->priv;
+
+  if (G_IS_DESKTOP_APP_INFO (p->appinfo))
+    {
+      path = g_desktop_app_info_get_filename (G_DESKTOP_APP_INFO(p->appinfo));
+    }
+
+  file = g_file_new_for_path (path);
+  g_file_load_contents_async (file, NULL, on_desktop_file_loaded, g_object_ref(self));
+  g_object_unref (G_OBJECT(file));
 }
