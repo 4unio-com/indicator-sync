@@ -1,16 +1,11 @@
 
-SUBDIRS = \
-	indicator-sync \
-	data \
-	examples \
-	po
+SUBDIRS = src data examples po
 
 if BUILD_TESTS
-SUBDIRS += \
-	test
+SUBDIRS += test
 
 # build src first
-test: indicator-sync
+test: src
 
 endif
 

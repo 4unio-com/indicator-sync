@@ -1,5 +1,5 @@
 /*
-   An indicator to show SyncClients' states and menus
+   An indicator to show SyncMenuApps' states and menus
 
    Copyright 2012 Canonical Ltd.
 
@@ -38,9 +38,9 @@
 #include <libido/idoswitchmenuitem.h>
 
 #include "dbus-shared.h"
+#include "sync-menu/sync-app.h"
+#include "sync-menu/sync-enum.h"
 #include "sync-service-dbus.h"
-#include "sync-client.h"
-#include "sync-enum.h"
 
 #define INDICATOR_SYNC_TYPE            (indicator_sync_get_type ())
 #define INDICATOR_SYNC(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), INDICATOR_SYNC_TYPE, IndicatorSync))
@@ -129,7 +129,7 @@ indicator_sync_init (IndicatorSync *self)
                                     APPLICATION_MENUITEM_TYPE,
                                     new_item_app);
   dbusmenu_client_add_type_handler (DBUSMENU_CLIENT(self->menu_client),
-                                    SYNC_PROGRESS_MENUITEM_TYPE,
+                                    SYNC_MENU_PROGRESS_MENUITEM_TYPE,
                                     new_item_prog);
 
   /* init the entry */
@@ -177,12 +177,12 @@ indicator_sync_finalize (GObject *object)
 *****
 ****/
 
-static SyncState
+static SyncMenuState
 get_service_state (IndicatorSync * self)
 {
   if (self->sync_service_proxy == NULL)
     {
-      return SYNC_STATE_IDLE;
+      return SYNC_MENU_STATE_IDLE;
     }
 
   return dbus_sync_service_get_state (self->sync_service_proxy);
@@ -208,7 +208,7 @@ get_service_count (IndicatorSync * self)
   return count;
 }
 
-/* show the indicator only if the service has SyncClients */
+/* show the indicator only if the service has SyncMenuApps */
 static void
 update_visibility (IndicatorSync * self)
 {
@@ -221,16 +221,16 @@ update_visibility (IndicatorSync * self)
 static void
 update_accessible_title (IndicatorSync * self)
 {
-  const SyncState state = get_service_state (self);
+  const SyncMenuState state = get_service_state (self);
   const gboolean paused = get_service_paused (self);
 
   const gchar * desc = NULL;
 
-  if (state == SYNC_STATE_ERROR)
+  if (state == SYNC_MENU_STATE_ERROR)
     {
       desc = _("Sync (error)");
     }
-  else if (state == SYNC_STATE_SYNCING)
+  else if (state == SYNC_MENU_STATE_SYNCING)
     {
       desc = _("Sync (syncing)");
     }
@@ -259,14 +259,14 @@ static const gchar *
 calculate_icon_name (IndicatorSync * self)
 {
   const gchar * icon_name;
-  const SyncState state = get_service_state (self);
+  const SyncMenuState state = get_service_state (self);
   const gboolean paused = get_service_paused (self);
 
-  if (state == SYNC_STATE_ERROR)
+  if (state == SYNC_MENU_STATE_ERROR)
     {
       icon_name = "sync-error";
     }
-  else if (state == SYNC_STATE_SYNCING)
+  else if (state == SYNC_MENU_STATE_SYNCING)
     {
       icon_name = "sync-syncing";
     }
@@ -388,7 +388,7 @@ on_service_manager_connection_changed (IndicatorServiceManager  * sm,
 static int aligned_left_margin = 0;
 
 /*
- * This ugly little hack aligns the SyncClient's exported GtkMenuItems'
+ * This ugly little hack aligns the SyncMenuApp's exported GtkMenuItems'
  * text with the AppMenuItem's GtkMenuItem text.
  *
  * Ideally we'd do this by setting the widgets' left margins when
@@ -470,9 +470,9 @@ static void
 app_update_label (DbusmenuMenuitem * mi, struct AppWidgets * w)
 {
   const gchar * name = dbusmenu_menuitem_property_get (mi, APPLICATION_MENUITEM_PROP_NAME);
-  const SyncState state = dbusmenu_menuitem_property_get_int (mi, APPLICATION_MENUITEM_PROP_STATE);
+  const SyncMenuState state = dbusmenu_menuitem_property_get_int (mi, APPLICATION_MENUITEM_PROP_STATE);
 
-  if (state != SYNC_STATE_ERROR)
+  if (state != SYNC_MENU_STATE_ERROR)
     {
       gtk_label_set_text (GTK_LABEL(w->label), name);
     }
@@ -557,7 +557,7 @@ new_item_app (DbusmenuMenuitem  * newitem,
 
 
 /***
-****  SYNC_PROGRESS_MENUITEM_TYPE handler
+****  SYNC_MENU_PROGRESS_MENUITEM_TYPE handler
 ****
 ****  FIXME: this would be a good candiate for promotion into IDO
 ****  if any other indicators need this in the future.
@@ -571,7 +571,7 @@ struct ProgWidgets
   GtkWidget * progress_bar;
 };
 
-#define PROP_PERCENT  SYNC_PROGRESS_MENUITEM_PROP_PERCENT_DONE
+#define PROP_PERCENT  SYNC_MENU_PROGRESS_MENUITEM_PROP_PERCENT_DONE
 #define PROP_LABEL    DBUSMENU_MENUITEM_PROP_LABEL
 
 static inline int

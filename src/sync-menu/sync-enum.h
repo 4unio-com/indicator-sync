@@ -17,25 +17,31 @@
    with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sync-enum.h"
+#ifndef __SYNC_ENUM_H__
+#define __SYNC_ENUM_H__
 
-GType
-sync_state_get_type (void)
-{
-  static GType etype = 0;
+#include <glib.h>
+#include <glib-object.h>
 
-  if (G_UNLIKELY(etype == 0))
-    {
-      static const GEnumValue values[] =
-        {
-          { SYNC_STATE_IDLE, "SYNC_STATE_IDLE", "idle" },
-          { SYNC_STATE_SYNCING, "SYNC_STATE_SYNCING", "syncing" },
-          { SYNC_STATE_ERROR, "SYNC_STATE_ERROR", "error" },
-          { 0, NULL, NULL }
-        };
+G_BEGIN_DECLS
 
-      etype = g_enum_register_static ("SyncState", values);
-    }
+/**
+ * SyncMenuState:
+ * @SYNC_MENU_STATE_IDLE:    The sync client is not active and has no errors.
+ * @SYNC_MENU_STATE_SYNCING: The sync client is actively synchronizing.
+ * @SYNC_MENU_STATE_ERROR:   The sync client has encountered an error that stopped activity.
+ */
+typedef enum
+  {
+    SYNC_MENU_STATE_IDLE,
+    SYNC_MENU_STATE_SYNCING,
+    SYNC_MENU_STATE_ERROR
+  }
+SyncMenuState;
 
-  return etype;
-}
+GType sync_menu_state_get_type(void);
+#define SYNC_MENU_TYPE_STATE (sync_menu_state_get_type())
+
+G_END_DECLS
+
+#endif

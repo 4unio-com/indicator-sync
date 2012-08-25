@@ -55,29 +55,29 @@ DBUSMENUGLIB_REQUIRED_VERSION=.0.6.2
 DBUSMENUGTK_REQUIRED_VERSION=0.5.90
 GLIB_REQUIRED_VERSION=2.32.0
 
-PKG_CHECK_MODULES(SYNC_CLIENT, [dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                gio-unix-2.0      >= $GIO_UNIX_REQUIRED_VERSION
-                                glib-2.0          >= $GLIB_REQUIRED_VERSION
-                                gmodule-2.0       >= $GLIB_REQUIRED_VERSION])
-AC_SUBST(SYNC_CLIENT_CFLAGS)
-AC_SUBST(SYNC_CLIENT_LIBS)
+PKG_CHECK_MODULES(SYNC_LIB_DEPS, [dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
+                                   gio-unix-2.0      >= $GIO_UNIX_REQUIRED_VERSION
+                                   glib-2.0          >= $GLIB_REQUIRED_VERSION
+                                   gmodule-2.0       >= $GLIB_REQUIRED_VERSION])
+AC_SUBST(SYNC_LIB_DEPS_CFLAGS)
+AC_SUBST(SYNC_LIB_DEPS_LIBS)
 
-PKG_CHECK_MODULES(SYNC_SERVICE, [indicator3-0.4    >= $INDICATOR_REQUIRED_VERSION
+PKG_CHECK_MODULES(SERVICE_DEPS, [indicator3-0.4    >= $INDICATOR_REQUIRED_VERSION
                                  dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
                                  gio-unix-2.0      >= $GIO_UNIX_REQUIRED_VERSION
                                  glib-2.0          >= $GLIB_REQUIRED_VERSION
                                  gmodule-2.0       >= $GLIB_REQUIRED_VERSION])
-AC_SUBST(SYNC_SERVICE_CFLAGS)
-AC_SUBST(SYNC_SERVICE_LIBS)
+AC_SUBST(SERVICE_DEPS_CFLAGS)
+AC_SUBST(SERVICE_DEPS_LIBS)
 
-PKG_CHECK_MODULES(SYNC_INDICATOR, [libido3-0.1          >= $IDO_REQUIRED_VERSION
+PKG_CHECK_MODULES(INDICATOR_DEPS, [libido3-0.1          >= $IDO_REQUIRED_VERSION
                                    indicator3-0.4       >= $INDICATOR_REQUIRED_VERSION
                                    dbusmenu-gtk3-0.4    >= $DBUSMENUGTK_REQUIRED_VERSION
                                    gtk+-3.0             >= $GTK_REQUIRED_VERSION
                                    glib-2.0             >= $GLIB_REQUIRED_VERSION
                                    gmodule-2.0          >= $GLIB_REQUIRED_VERSION])
-AC_SUBST(SYNC_INDICATOR_CFLAGS)
-AC_SUBST(SYNC_INDICATOR_LIBS)
+AC_SUBST(INDICATOR_DEPS_CFLAGS)
+AC_SUBST(INDICATOR_DEPS_LIBS)
 
 ###########################
 # gcov coverage reporting
@@ -177,8 +177,11 @@ AM_GLIB_GNU_GETTEXT
 AM_CONDITIONAL([HAS_PYTHON], [test "x$have_python" = "xyes"])
 
 AC_OUTPUT([Makefile
-           indicator-sync/Makefile
-           indicator-sync/indicator-sync-client-0.1.pc.in
+           src/Makefile
+           src/sync-menu/Makefile
+           src/sync-menu/sync-menu-0.1.pc
+           src/service/Makefile
+           src/indicator/Makefile
            data/Makefile
            data/icons/Makefile
            data/icons/22x22/Makefile
