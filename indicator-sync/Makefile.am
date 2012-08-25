@@ -94,7 +94,7 @@ introspection_sources = $(libindicator_sync_client_la_SOURCES)
 
 SyncClient-12.10.gir: libindicator-sync-client.la
 SyncClient_12_10_gir_VERSION = @GIR_VERSION@
-SyncClient_12_10_gir_INCLUDES = GObject-2.0
+SyncClient_12_10_gir_INCLUDES = GObject-2.0 Dbusmenu-0.4
 SyncClient_12_10_gir_CFLAGS = $(INCLUDES) -I$(srcdir)/..
 SyncClient_12_10_gir_LIBS = libindicator-sync-client.la
 SyncClient_12_10_gir_PACKAGES = dbusmenu-glib-0.4 glib-2.0 
