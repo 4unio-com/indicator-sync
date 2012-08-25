@@ -78,7 +78,7 @@ SyncMenu_12_10_gir_INCLUDES = GObject-2.0 Dbusmenu-0.4
 SyncMenu_12_10_gir_CFLAGS = $(INCLUDES) -I$(srcdir)/..
 SyncMenu_12_10_gir_LIBS = libsync-menu.la
 SyncMenu_12_10_gir_PACKAGES = dbusmenu-glib-0.4 glib-2.0 
-SyncMenu_12_10_gir_FILES = sync-app.c sync-app.h sync-enum.c sync-enum.h
+SyncMenu_12_10_gir_FILES = $(introspection_sources)
 INTROSPECTION_GIRS += SyncMenu-12.10.gir
 
 girdir = $(datadir)/gir-1.0
