@@ -174,19 +174,20 @@ AM_GLIB_GNU_GETTEXT
 # Files
 ###########################
 
-AC_OUTPUT([Makefile
-           src/Makefile
-           src/sync-menu/Makefile
-           src/sync-menu/sync-menu-0.1.pc
-           src/service/Makefile
-           src/indicator/Makefile
-           data/Makefile
-           data/icons/Makefile
-           data/icons/22x22/Makefile
-           data/icons/22x22/status/Makefile
-           examples/Makefile
-           test/Makefile
-           po/Makefile.in])
+AC_CONFIG_FILES([Makefile
+                 src/Makefile
+                 src/sync-menu/Makefile
+                 src/sync-menu/sync-menu-0.1.pc
+                 src/service/Makefile
+                 src/indicator/Makefile
+                 data/Makefile
+                 data/icons/Makefile
+                 data/icons/22x22/Makefile
+                 data/icons/22x22/status/Makefile
+                 examples/Makefile
+                 test/Makefile
+                 po/Makefile.in])
+AC_OUTPUT
 
 ###########################
 # Results
