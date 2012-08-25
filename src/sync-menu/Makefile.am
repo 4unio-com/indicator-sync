@@ -74,14 +74,14 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 if HAVE_INTROSPECTION
 introspection_sources = $(local_sources) $(libsync_menu_la_include_HEADERS)
 
-SyncMenu-12.10.gir: libsync-menu.la
-SyncMenu_12_10_gir_VERSION = @GIR_VERSION@
-SyncMenu_12_10_gir_INCLUDES = GObject-2.0 Dbusmenu-0.4
-SyncMenu_12_10_gir_CFLAGS = $(INCLUDES) -I$(srcdir)/..
-SyncMenu_12_10_gir_LIBS = libsync-menu.la
-SyncMenu_12_10_gir_PACKAGES = dbusmenu-glib-0.4 glib-2.0 
-SyncMenu_12_10_gir_FILES = $(introspection_sources)
-INTROSPECTION_GIRS += SyncMenu-12.10.gir
+SyncMenu-0.1.gir: libsync-menu.la
+SyncMenu_0_1_gir_VERSION = @GIR_VERSION@
+SyncMenu_0_1_gir_INCLUDES = GObject-2.0 Dbusmenu-0.4
+SyncMenu_0_1_gir_CFLAGS = $(INCLUDES) -I$(srcdir)/..
+SyncMenu_0_1_gir_LIBS = libsync-menu.la
+SyncMenu_0_1_gir_PACKAGES = dbusmenu-glib-0.4 glib-2.0 
+SyncMenu_0_1_gir_FILES = $(introspection_sources)
+INTROSPECTION_GIRS += SyncMenu-0.1.gir
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = $(INTROSPECTION_GIRS)
