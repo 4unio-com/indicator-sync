@@ -22,9 +22,6 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_PATH_PROG([GLIB_MKENUMS], [glib-mkenums])
 
-# the Google Test targets are cpp
-AC_PROG_CXX
-
 
 ###########################
 # GObject Introspection
@@ -100,6 +97,7 @@ AC_ARG_ENABLE([tests],
     [enable_tests=${enableval}],
     [enable_tests=auto])
 if test "x$enable_tests" != "xno"; then
+    AC_PROG_CXX
     m4_include([m4/gtest.m4])
     CHECK_GTEST
     if test "x$enable_tests" = "xauto"; then
