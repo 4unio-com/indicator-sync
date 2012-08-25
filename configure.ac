@@ -1,9 +1,10 @@
-AC_INIT(indicator-sync, 12.10.0)
+AC_INIT([indicator-sync], [12.10.0])
+AC_CONFIG_SRCDIR([src/dbus-shared.h])
+AM_INIT_AUTOMAKE
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE()
 
 AM_MAINTAINER_MODE
 
