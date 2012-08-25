@@ -8,7 +8,6 @@ endif
 
 DISTCHECK_CONFIGURE_FLAGS = \
   --enable-localinstall \
-  --enable-deprecations \
   --enable-introspection \
   --enable-tests=yes
 
