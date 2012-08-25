@@ -115,7 +115,10 @@ AM_CONDITIONAL([BUILD_TESTS],[test "x$enable_tests" = "xyes"])
 ###########################
 
 with_localinstall="no"
-AC_ARG_ENABLE(localinstall, AS_HELP_STRING([--enable-localinstall], [install all of the files localy instead of system directories (for distcheck)]), with_localinstall=$enableval, with_localinstall=no)
+AC_ARG_ENABLE([localinstall],
+              [AS_HELP_STRING([--enable-localinstall], [install all of the files localy instead of system directories (for distcheck)])],
+              [with_localinstall=$enableval],
+              [with_localinstall=no])
 
 ###########################
 # Indicator Info
