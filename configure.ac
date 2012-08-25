@@ -175,8 +175,6 @@ AM_GLIB_GNU_GETTEXT
 # Files
 ###########################
 
-AM_CONDITIONAL([HAS_PYTHON], [test "x$have_python" = "xyes"])
-
 AC_OUTPUT([Makefile
            src/Makefile
            src/sync-menu/Makefile
@@ -201,7 +199,6 @@ Sync Indicator Configuration:
 
 	Prefix:           $prefix
 	Indicator Dir:    $INDICATORDIR
-	Python Bindings:  $have_python
 	gtest:            $enable_tests
 	gcov:             $use_gcov
 ])
