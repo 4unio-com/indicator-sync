@@ -201,4 +201,5 @@ Sync Indicator Configuration:
 	Indicator Dir:    $INDICATORDIR
 	gtest:            $enable_tests
 	gcov:             $use_gcov
+	introspection:    $enable_introspection
 ])
