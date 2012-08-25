@@ -27,12 +27,15 @@ libsync_menu_la_CFLAGS = \
   -Wl,--as-needed \
   -DG_LOG_DOMAIN=\"libsync-menu\"
 
+local_sources = \
+  sync-app.c \
+  sync-enum.c
+
 libsync_menu_la_SOURCES = \
   $(top_builddir)/src/sync-app-dbus.c \
   $(top_builddir)/src/sync-app-dbus.h \
   $(top_srcdir)/src/dbus-shared.h \
-  sync-app.c \
-  sync-enum.c
+  $(local_sources)
 
 
 ###
@@ -69,7 +72,7 @@ INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
 INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 if HAVE_INTROSPECTION
-introspection_sources = $(libsync_menu_la_SOURCES)
+introspection_sources = $(local_sources) $(libsync_menu_la_include_HEADERS)
 
 SyncMenu-12.10.gir: libsync-menu.la
 SyncMenu_12_10_gir_VERSION = @GIR_VERSION@
