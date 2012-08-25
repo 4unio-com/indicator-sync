@@ -5,11 +5,11 @@ sync_app_example_SOURCES = \
   sync-app-example.c
 
 sync_app_example_CPPFLAGS = \
-  $(SYNC_LIB_DEPS_CFLAGS) \
-  -I$(top_srcdir)/src
+  -I$(top_srcdir)/src \
+  $(SYNC_LIB_DEPS_CFLAGS)
 
 sync_app_example_CFLAGS = \
-  -Wall
+  -Wall -Werror
 
 sync_app_example_LDADD = \
   $(top_builddir)/src/sync-menu/libsync-menu.la \
