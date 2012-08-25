@@ -12,7 +12,7 @@ sync_app_example_CFLAGS = \
   -Wall
 
 sync_app_example_LDADD = \
-  $(top_builddir)/src/libsync-menu/libsync-menu.la \
+  $(top_builddir)/src/sync-menu/libsync-menu.la \
   $(SYNC_LIB_DEPS_LIBS)
 
 examplesdir = $(docdir)/examples/

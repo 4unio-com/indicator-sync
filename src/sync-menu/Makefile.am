@@ -17,9 +17,10 @@ libsync_menu_la_LDFLAGS = \
   -export-symbols-regex "^[^_d].*"
 
 libsync_menu_la_CFLAGS = \
+  -I$(top_srcdir)/src \
+  -I$(top_builddir)/src \
   $(SYNC_LIB_DEPS_CFLAGS) \
   $(COVERAGE_CFLAGS) \
-  -I$(srcdir)/.. \
   -Wall -Werror \
   -Wl,-Bsymbolic-functions \
   -Wl,-z,defs \
@@ -27,9 +28,9 @@ libsync_menu_la_CFLAGS = \
   -DG_LOG_DOMAIN=\"libsync-menu\"
 
 libsync_menu_la_SOURCES = \
-  ../sync-app-dbus.c \
-  ../sync-app-dbus.h \
-  dbus-shared.h \
+  $(top_builddir)/src/sync-app-dbus.c \
+  $(top_builddir)/src/sync-app-dbus.h \
+  $(top_srcdir)/src/dbus-shared.h \
   sync-app.c \
   sync-enum.c
 

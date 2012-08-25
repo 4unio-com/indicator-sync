@@ -1,6 +1,6 @@
 [encoding: UTF-8]
-indicator/indicator-sync.c
-service/app-menu-item.c
-service/sync-service.c
-libsync-menu/sync-enum.c
-libsync-menu/sync-app.c
+src/indicator/indicator-sync.c
+src/service/app-menu-item.c
+src/service/sync-service.c
+src/sync-menu/sync-enum.c
+src/sync-menu/sync-app.c

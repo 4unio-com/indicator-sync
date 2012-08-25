@@ -4,13 +4,14 @@ synclib_LTLIBRARIES = libsyncindicator.la
 synclibdir = $(INDICATORDIR)
 
 libsyncindicator_la_SOURCES = \
-  ../sync-service-dbus.c \
-  ../sync-service-dbus.h \
+  $(top_builddir)/src/sync-service-dbus.c \
+  $(top_builddir)/src/sync-service-dbus.h \
   indicator-sync.c
 
 libsyncindicator_la_CFLAGS = \
+  -I$(top_srcdir)/src \
+  -I$(top_builddir)/src \
   $(INDICATOR_DEPS_CFLAGS) \
-  -I$(srcdir)/.. \
   $(COVERAGE_CFLAGS) \
   -Wall -Werror \
   -Wl,-Bsymbolic-functions \
