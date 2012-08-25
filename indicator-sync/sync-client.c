@@ -308,8 +308,8 @@ sync_client_init (SyncClient * client)
  *
  * The initial state is %SYNC_STATE_IDLE, unpaused, and with no menu.
  *
- * Returns: transfer full: a new SyncClient for the desktop id.
- *                         Free the returned object with g_object_unref().
+ * Returns: (transfer full): a new #SyncClient for the desktop id.
+ *                           Free the returned object with g_object_unref().
  */
 SyncClient *
 sync_client_new (const char * desktop_id)
