@@ -35,8 +35,6 @@ G_BEGIN_DECLS
 
 GType sync_client_get_type (void) G_GNUC_CONST;
 
-typedef struct _SyncMenuClient SyncMenuClient;
-
 #define SYNC_CLIENT_TYPE            (sync_client_get_type ())
 #define SYNC_CLIENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), SYNC_CLIENT_TYPE, SyncClient))
 #define SYNC_CLIENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), SYNC_CLIENT_TYPE, SyncClientClass))
