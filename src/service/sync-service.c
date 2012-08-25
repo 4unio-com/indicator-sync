@@ -37,7 +37,7 @@
 #include <libindicator/indicator-service.h>
 
 #include "sync-menu/sync-app.h"
-#include "libsync-menu/sync-enum.h"
+#include "sync-menu/sync-enum.h"
 
 #include "app-menu-item.h"
 #include "dbus-shared.h"
