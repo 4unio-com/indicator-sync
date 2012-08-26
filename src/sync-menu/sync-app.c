@@ -65,6 +65,7 @@ static void sync_menu_app_class_init (SyncMenuAppClass * klass);
 static void sync_menu_app_init       (SyncMenuApp *self);
 static void sync_menu_app_dispose    (GObject *object);
 static void sync_menu_app_finalize   (GObject *object);
+static void sync_menu_app_constructed  (GObject *object);
 static void set_property (GObject*, guint prop_id, const GValue*, GParamSpec* );
 static void get_property (GObject*, guint prop_id,       GValue*, GParamSpec* );
 
@@ -79,6 +80,7 @@ sync_menu_app_class_init (SyncMenuAppClass * klass)
 
   object_class->dispose = sync_menu_app_dispose;
   object_class->finalize = sync_menu_app_finalize;
+  object_class->constructed = sync_menu_app_constructed;
   object_class->set_property = set_property;
   object_class->get_property = get_property;
 
@@ -130,15 +132,8 @@ sync_menu_app_dispose (GObject *object)
       p->signal_subscription = 0;
     }
 
-  if (p->session_bus)
-    {
-      GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
-
-      if (g_dbus_interface_skeleton_has_connection (s, p->session_bus))
-        {
-          g_dbus_interface_skeleton_unexport (s);
-        }
-    }
+  g_dbus_interface_skeleton_unexport (G_DBUS_INTERFACE_SKELETON(p->skeleton));
+  g_clear_object (&p->skeleton);
 
   if (p->cancellable != NULL)
     {
@@ -153,7 +148,6 @@ sync_menu_app_dispose (GObject *object)
     }
 
   g_clear_object (&p->session_bus);
-  g_clear_object (&p->skeleton);
 
   G_OBJECT_CLASS (sync_menu_app_parent_class)->dispose (object);
 }
@@ -200,76 +194,62 @@ build_path_from_desktop_id (const gchar * desktop_id)
 }
 
 static void
-export_if_ready (SyncMenuApp * client)
+on_sync_service_name_appeared (GDBusConnection  * connection,
+                               const gchar      * name,
+                               const gchar      * name_owner,
+                               gpointer           user_data)
 {
-  SyncMenuAppPriv * p = client->priv;
-  GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
-  const gchar * const desktop_id = p->desktop_id;
+  g_debug (G_STRLOC" %s", G_STRFUNC);
+  SyncMenuApp * app = SYNC_MENU_APP(user_data);
+  SyncMenuAppPriv * p = app->priv;
 
-  if ((desktop_id != NULL) &&
-      (p->session_bus != NULL) &&
-      (s != NULL) &&
-      (!g_dbus_interface_skeleton_has_connection (s, p->session_bus)))
-    {
-      GError * err = NULL;
-      gchar * path = build_path_from_desktop_id (desktop_id);
-      g_dbus_interface_skeleton_export (s, p->session_bus, path, &err);
-
-      if (err == NULL)
-        {
-          /* tell the world that we're here */
-          dbus_sync_menu_app_emit_exists (p->skeleton);
-        }
-      else
-        { 
-          g_error ("unable to export skeleton: %s", err->message);
-          g_clear_error (&err);
-        }
-    }
+  dbus_sync_menu_app_emit_exists (p->skeleton);
 }
 
 static void
-on_sync_service_name_appeared (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
+on_sync_service_name_vanished (GDBusConnection  * connection,
+                               const gchar      * name,
+                               gpointer           user_data)
 {
-  export_if_ready (SYNC_MENU_APP(user_data));
-}
-
-static void
-on_sync_service_name_vanished (GDBusConnection * connection, const gchar * name, gpointer user_data)
-{
-  SyncMenuApp * client = SYNC_MENU_APP(user_data);
-  SyncMenuAppPriv * p = client->priv;
-  GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
-
-  if (g_dbus_interface_skeleton_has_connection (s, p->session_bus))
-    {
-      g_dbus_interface_skeleton_unexport (s);
-    }
+  g_debug (G_STRLOC" %s", G_STRFUNC);
 }
 
 static void
 on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 {
+  g_debug (G_STRLOC" %s", G_STRFUNC);
+  GError * err = NULL;
   SyncMenuApp * client = SYNC_MENU_APP(user_data);
   SyncMenuAppPriv * p = client->priv;
 
-  GError * err = NULL;
   p->session_bus = g_bus_get_finish (res, &err);
   if (err != NULL)
     { 
       g_error ("unable to get bus: %s", err->message);
-      g_clear_error (&err);
     }
   else
     {
+      gchar * path;
+
+      GDBusInterfaceSkeleton * skeleton = G_DBUS_INTERFACE_SKELETON(p->skeleton);
+      path = build_path_from_desktop_id (p->desktop_id);
+      g_dbus_interface_skeleton_export (skeleton, p->session_bus, path, &err);
+      if (err != NULL)
+        { 
+          g_error ("unable to export skeleton: %s", err->message);
+        }
+
       p->watch_id = g_bus_watch_name_on_connection (p->session_bus,
                                                     SYNC_SERVICE_DBUS_NAME,
                                                     G_BUS_NAME_WATCHER_FLAGS_AUTO_START,
                                                     on_sync_service_name_appeared,
                                                     on_sync_service_name_vanished,
                                                     client, NULL);
-      export_if_ready (client);
+
+      g_free (path);
     }
+
+  g_clear_error (&err);
 }
 
 static void
@@ -278,8 +258,6 @@ sync_menu_app_init (SyncMenuApp * client)
   SyncMenuAppPriv * p;
 
   p = G_TYPE_INSTANCE_GET_PRIVATE (client, SYNC_MENU_APP_TYPE, SyncMenuAppPriv);
-  client->priv = p;
-
   p->paused = FALSE;
   p->menu_server = NULL;
   p->desktop_id = NULL;
@@ -287,15 +265,26 @@ sync_menu_app_init (SyncMenuApp * client)
   p->state = SYNC_MENU_STATE_IDLE;
   p->cancellable = g_cancellable_new();
 
-  g_object_bind_property (client,      SYNC_MENU_APP_PROP_PAUSED,
+  client->priv = p;
+}
+
+static void
+sync_menu_app_constructed (GObject * object)
+{
+  SyncMenuApp * app = SYNC_MENU_APP(object);
+  SyncMenuAppPriv * p = app->priv;
+
+  g_object_bind_property (app,         SYNC_MENU_APP_PROP_PAUSED,
                           p->skeleton, SYNC_MENU_APP_PROP_PAUSED,
                           G_BINDING_BIDIRECTIONAL|G_BINDING_SYNC_CREATE);
 
-  g_object_bind_property (client,      SYNC_MENU_APP_PROP_STATE,
+  g_object_bind_property (app,         SYNC_MENU_APP_PROP_STATE,
                           p->skeleton, SYNC_MENU_APP_PROP_STATE,
                           G_BINDING_SYNC_CREATE);
 
-  g_bus_get (G_BUS_TYPE_SESSION, p->cancellable, on_got_bus, client);
+  g_bus_get (G_BUS_TYPE_SESSION, p->cancellable, on_got_bus, app);
+
+  G_OBJECT_CLASS (sync_menu_app_parent_class)->constructed (object);
 }
 
 /**
@@ -383,9 +372,8 @@ set_property (GObject       * o,
       case PROP_DESKTOP_ID:
         g_return_if_fail (p->desktop_id == NULL); /* ctor only */
         p->desktop_id = g_value_dup_string (value);
-        g_debug (G_STRLOC" setting desktop_id to '%s'", p->desktop_id);
+        g_debug (G_STRLOC" initializing desktop_id to '%s'", p->desktop_id);
         dbus_sync_menu_app_set_desktop (p->skeleton, p->desktop_id);
-        export_if_ready (client);
         break;
 
       default:
