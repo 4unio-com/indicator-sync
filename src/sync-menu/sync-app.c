@@ -30,20 +30,20 @@
 #include <libdbusmenu-glib/dbusmenu-glib.h>
 
 #include "dbus-shared.h"
-#include "sync-client.h"
-#include "sync-client-dbus.h"
+#include "sync-app.h"
+#include "sync-app-dbus.h"
 #include "sync-enum.h"
 
-struct _SyncClientPriv
+struct _SyncMenuAppPriv
 {
   guint             watch_id;
   GDBusConnection * session_bus;
   guint             signal_subscription;
-  DbusSyncClient  * skeleton;
+  DbusSyncMenuApp  * skeleton;
   DbusmenuServer  * menu_server;
   GBinding        * menu_binding;
   gchar           * desktop_id;
-  SyncState         state;
+  SyncMenuState         state;
   gboolean          paused;
   GCancellable    * cancellable;
 };
@@ -61,51 +61,51 @@ enum
 static GParamSpec * properties[N_PROPERTIES];
 
 /* GObject stuff */
-static void sync_client_class_init (SyncClientClass * klass);
-static void sync_client_init       (SyncClient *self);
-static void sync_client_dispose    (GObject *object);
-static void sync_client_finalize   (GObject *object);
+static void sync_menu_app_class_init (SyncMenuAppClass * klass);
+static void sync_menu_app_init       (SyncMenuApp *self);
+static void sync_menu_app_dispose    (GObject *object);
+static void sync_menu_app_finalize   (GObject *object);
 static void set_property (GObject*, guint prop_id, const GValue*, GParamSpec* );
 static void get_property (GObject*, guint prop_id,       GValue*, GParamSpec* );
 
-G_DEFINE_TYPE (SyncClient, sync_client, G_TYPE_OBJECT);
+G_DEFINE_TYPE (SyncMenuApp, sync_menu_app, G_TYPE_OBJECT);
 
 static void
-sync_client_class_init (SyncClientClass * klass)
+sync_menu_app_class_init (SyncMenuAppClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (SyncClientPriv));
+  g_type_class_add_private (klass, sizeof (SyncMenuAppPriv));
 
-  object_class->dispose = sync_client_dispose;
-  object_class->finalize = sync_client_finalize;
+  object_class->dispose = sync_menu_app_dispose;
+  object_class->finalize = sync_menu_app_finalize;
   object_class->set_property = set_property;
   object_class->get_property = get_property;
 
   properties[PROP_STATE] = g_param_spec_enum (
-    SYNC_CLIENT_PROP_STATE,
+    SYNC_MENU_APP_PROP_STATE,
     "State",
-    "The SyncState that represents this client's state",
-    sync_state_get_type(),
-    SYNC_STATE_IDLE,
+    "The SyncMenuState that represents this client's state",
+    SYNC_MENU_TYPE_STATE,
+    SYNC_MENU_STATE_IDLE,
     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_PAUSED] = g_param_spec_boolean (
-    SYNC_CLIENT_PROP_PAUSED,
+    SYNC_MENU_APP_PROP_PAUSED,
     "Paused",
     "Whether or not this client is paused",
     FALSE,
     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_DESKTOP_ID] = g_param_spec_string (
-    SYNC_CLIENT_PROP_DESKTOP_ID,
+    SYNC_MENU_APP_PROP_DESKTOP_ID,
     "Desktop Id",
     "The name of the .desktop file that belongs to the client app",
     NULL,
     G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_DBUSMENU] = g_param_spec_object (
-    SYNC_CLIENT_PROP_DBUSMENU,
+    SYNC_MENU_APP_PROP_DBUSMENU,
     "MenuItems",
     "The extra menuitems to display in the client's section in the Sync Indicator",
     DBUSMENU_TYPE_SERVER,
@@ -115,13 +115,13 @@ sync_client_class_init (SyncClientClass * klass)
 }
 
 static void
-sync_client_dispose (GObject *object)
+sync_menu_app_dispose (GObject *object)
 {
-  SyncClient * self = SYNC_CLIENT(object);
+  SyncMenuApp * self = SYNC_MENU_APP(object);
   g_return_if_fail (self != NULL);
-  SyncClientPriv * p = self->priv;
+  SyncMenuAppPriv * p = self->priv;
 
-  sync_client_set_menu (self, NULL);
+  sync_menu_app_set_menu (self, NULL);
 
   if (p->signal_subscription)
     {
@@ -155,19 +155,19 @@ sync_client_dispose (GObject *object)
   g_clear_object (&p->session_bus);
   g_clear_object (&p->skeleton);
 
-  G_OBJECT_CLASS (sync_client_parent_class)->dispose (object);
+  G_OBJECT_CLASS (sync_menu_app_parent_class)->dispose (object);
 }
 
 static void
-sync_client_finalize (GObject *object)
+sync_menu_app_finalize (GObject *object)
 {
-  SyncClient * self = SYNC_CLIENT(object);
+  SyncMenuApp * self = SYNC_MENU_APP(object);
   g_return_if_fail (self != NULL);
-  SyncClientPriv * p = self->priv;
+  SyncMenuAppPriv * p = self->priv;
 
   g_clear_pointer (&p->desktop_id, g_free);
 
-  G_OBJECT_CLASS (sync_client_parent_class)->finalize (object);
+  G_OBJECT_CLASS (sync_menu_app_parent_class)->finalize (object);
 }
 
 static gchar*
@@ -200,9 +200,9 @@ build_path_from_desktop_id (const gchar * desktop_id)
 }
 
 static void
-export_if_ready (SyncClient * client)
+export_if_ready (SyncMenuApp * client)
 {
-  SyncClientPriv * p = client->priv;
+  SyncMenuAppPriv * p = client->priv;
   GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
   const gchar * const desktop_id = p->desktop_id;
 
@@ -218,7 +218,7 @@ export_if_ready (SyncClient * client)
       if (err == NULL)
         {
           /* tell the world that we're here */
-          dbus_sync_client_emit_exists (p->skeleton);
+          dbus_sync_menu_app_emit_exists (p->skeleton);
         }
       else
         { 
@@ -231,14 +231,14 @@ export_if_ready (SyncClient * client)
 static void
 on_sync_service_name_appeared (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
 {
-  export_if_ready (SYNC_CLIENT(user_data));
+  export_if_ready (SYNC_MENU_APP(user_data));
 }
 
 static void
 on_sync_service_name_vanished (GDBusConnection * connection, const gchar * name, gpointer user_data)
 {
-  SyncClient * client = SYNC_CLIENT(user_data);
-  SyncClientPriv * p = client->priv;
+  SyncMenuApp * client = SYNC_MENU_APP(user_data);
+  SyncMenuAppPriv * p = client->priv;
   GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
 
   if (g_dbus_interface_skeleton_has_connection (s, p->session_bus))
@@ -250,8 +250,8 @@ on_sync_service_name_vanished (GDBusConnection * connection, const gchar * name,
 static void
 on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 {
-  SyncClient * client = SYNC_CLIENT(user_data);
-  SyncClientPriv * p = client->priv;
+  SyncMenuApp * client = SYNC_MENU_APP(user_data);
+  SyncMenuAppPriv * p = client->priv;
 
   GError * err = NULL;
   p->session_bus = g_bus_get_finish (res, &err);
@@ -273,52 +273,52 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 }
 
 static void
-sync_client_init (SyncClient * client)
+sync_menu_app_init (SyncMenuApp * client)
 {
-  SyncClientPriv * p;
+  SyncMenuAppPriv * p;
 
-  p = G_TYPE_INSTANCE_GET_PRIVATE (client, SYNC_CLIENT_TYPE, SyncClientPriv);
+  p = G_TYPE_INSTANCE_GET_PRIVATE (client, SYNC_MENU_APP_TYPE, SyncMenuAppPriv);
   client->priv = p;
 
   p->paused = FALSE;
   p->menu_server = NULL;
   p->desktop_id = NULL;
-  p->skeleton = dbus_sync_client_skeleton_new ();
-  p->state = SYNC_STATE_IDLE;
+  p->skeleton = dbus_sync_menu_app_skeleton_new ();
+  p->state = SYNC_MENU_STATE_IDLE;
   p->cancellable = g_cancellable_new();
 
-  g_object_bind_property (client,      SYNC_CLIENT_PROP_PAUSED,
-                          p->skeleton, SYNC_CLIENT_PROP_PAUSED,
+  g_object_bind_property (client,      SYNC_MENU_APP_PROP_PAUSED,
+                          p->skeleton, SYNC_MENU_APP_PROP_PAUSED,
                           G_BINDING_BIDIRECTIONAL|G_BINDING_SYNC_CREATE);
 
-  g_object_bind_property (client,      SYNC_CLIENT_PROP_STATE,
-                          p->skeleton, SYNC_CLIENT_PROP_STATE,
+  g_object_bind_property (client,      SYNC_MENU_APP_PROP_STATE,
+                          p->skeleton, SYNC_MENU_APP_PROP_STATE,
                           G_BINDING_SYNC_CREATE);
 
   g_bus_get (G_BUS_TYPE_SESSION, p->cancellable, on_got_bus, client);
 }
 
 /**
- * sync_client_new:
+ * sync_menu_app_new:
  * @desktop_id: A desktop id as described by g_desktop_app_info_new(),
  *              such as "transmission-gtk.desktop"
  *
- * Creates a new #SyncClient object. Applications wanting to interact
+ * Creates a new #SyncMenuApp object. Applications wanting to interact
  * with the Sync Indicator should instantiate one of these and use it.
  *
- * The initial state is %SYNC_STATE_IDLE, unpaused, and with no menu.
+ * The initial state is %SYNC_MENU_STATE_IDLE, unpaused, and with no menu.
  *
- * Returns: transfer full: a new SyncClient for the desktop id.
- *                         Free the returned object with g_object_unref().
+ * Returns: (transfer full): a new #SyncMenuApp for the desktop id.
+ *                           Free the returned object with g_object_unref().
  */
-SyncClient *
-sync_client_new (const char * desktop_id)
+SyncMenuApp *
+sync_menu_app_new (const char * desktop_id)
 {
-  GObject * o = g_object_new (SYNC_CLIENT_TYPE,
-                              SYNC_CLIENT_PROP_DESKTOP_ID, desktop_id,
+  GObject * o = g_object_new (SYNC_MENU_APP_TYPE,
+                              SYNC_MENU_APP_PROP_DESKTOP_ID, desktop_id,
                               NULL);
 
-  return SYNC_CLIENT(o);
+  return SYNC_MENU_APP(o);
 }
 
 /***
@@ -331,7 +331,7 @@ get_property (GObject     * o,
               GValue      * value,
               GParamSpec  * pspec)
 {
-  SyncClient * client = SYNC_CLIENT(o);
+  SyncMenuApp * client = SYNC_MENU_APP(o);
 
   switch (prop_id)
     {
@@ -348,7 +348,7 @@ get_property (GObject     * o,
         break;
 
       case PROP_DBUSMENU:
-        g_value_set_object (value, sync_client_get_menu(client));
+        g_value_set_object (value, sync_menu_app_get_menu(client));
         break;
 
       default:
@@ -363,28 +363,28 @@ set_property (GObject       * o,
               const GValue  * value,
               GParamSpec    * pspec)
 {
-  SyncClient * client = SYNC_CLIENT(o);
-  SyncClientPriv * p = client->priv;
+  SyncMenuApp * client = SYNC_MENU_APP(o);
+  SyncMenuAppPriv * p = client->priv;
 
   switch (prop_id)
     {
       case PROP_STATE:
-        sync_client_set_state (client, g_value_get_enum(value));
+        sync_menu_app_set_state (client, g_value_get_enum(value));
         break;
 
       case PROP_PAUSED:
-        sync_client_set_paused (client, g_value_get_boolean (value));
+        sync_menu_app_set_paused (client, g_value_get_boolean (value));
         break;
 
       case PROP_DBUSMENU:
-        sync_client_set_menu (client, DBUSMENU_SERVER(g_value_get_object(value)));
+        sync_menu_app_set_menu (client, DBUSMENU_SERVER(g_value_get_object(value)));
         break;
 
       case PROP_DESKTOP_ID:
         g_return_if_fail (p->desktop_id == NULL); /* ctor only */
         p->desktop_id = g_value_dup_string (value);
         g_debug (G_STRLOC" setting desktop_id to '%s'", p->desktop_id);
-        dbus_sync_client_set_desktop (p->skeleton, p->desktop_id);
+        dbus_sync_menu_app_set_desktop (p->skeleton, p->desktop_id);
         export_if_ready (client);
         break;
 
@@ -395,73 +395,73 @@ set_property (GObject       * o,
 }
 
 /**
- * sync_client_get_paused:
- * @client: a #SyncClient
+ * sync_menu_app_get_paused:
+ * @client: a #SyncMenuApp
  *
  * Returns: the client's current 'paused' property.
  */
 gboolean
-sync_client_get_paused (SyncClient * client)
+sync_menu_app_get_paused (SyncMenuApp * client)
 {
-  g_return_val_if_fail (IS_SYNC_CLIENT(client), FALSE);
+  g_return_val_if_fail (IS_SYNC_MENU_APP(client), FALSE);
 
   return client->priv->paused;
 }
 
 /**
- * sync_client_get_state:
- * @client: a #SyncClient
+ * sync_menu_app_get_state:
+ * @client: a #SyncMenuApp
  *
- * Returns: the client's current #SyncState, such as %SYNC_STATE_IDLE
+ * Returns: the client's current #SyncMenuState, such as %SYNC_MENU_STATE_IDLE
  */
-SyncState
-sync_client_get_state (SyncClient * client)
+SyncMenuState
+sync_menu_app_get_state (SyncMenuApp * client)
 {
-  g_return_val_if_fail (IS_SYNC_CLIENT(client), SYNC_STATE_ERROR);
+  g_return_val_if_fail (IS_SYNC_MENU_APP(client), SYNC_MENU_STATE_ERROR);
 
   return client->priv->state;
 }
 
 /**
- * sync_client_get_desktop_id:
- * @client: a #SyncClient
+ * sync_menu_app_get_desktop_id:
+ * @client: a #SyncMenuApp
  *
  * Returns: (transfer none): the client's desktop id
  */
 const gchar*
-sync_client_get_desktop_id (SyncClient * client)
+sync_menu_app_get_desktop_id (SyncMenuApp * client)
 {
-  g_return_val_if_fail (IS_SYNC_CLIENT(client), NULL);
+  g_return_val_if_fail (IS_SYNC_MENU_APP(client), NULL);
 
   return client->priv->desktop_id;
 }
 
 /**
- * sync_client_get_menu:
- * @client: a #SyncClient
+ * sync_menu_app_get_menu:
+ * @client: a #SyncMenuApp
  *
  * Returns: (transfer none): the client's #DbusmenuServer
  */
 DbusmenuServer*
-sync_client_get_menu (SyncClient * client)
+sync_menu_app_get_menu (SyncMenuApp * client)
 {
-  g_return_val_if_fail (IS_SYNC_CLIENT(client), NULL);
+  g_return_val_if_fail (IS_SYNC_MENU_APP(client), NULL);
 
   return client->priv->menu_server;
 }
 
 /**
- * sync_client_set_paused:
- * @client: a #SyncClient
+ * sync_menu_app_set_paused:
+ * @client: a #SyncMenuApp
  * @paused: a boolean of whether or not the client is paused
  *
- * Sets the client's SyncClient:paused property
+ * Sets the client's SyncMenuApp:paused property
  */
 void
-sync_client_set_paused (SyncClient * client, gboolean paused)
+sync_menu_app_set_paused (SyncMenuApp * client, gboolean paused)
 {
-  g_return_if_fail (IS_SYNC_CLIENT(client));
-  SyncClientPriv * p = client->priv;
+  g_return_if_fail (IS_SYNC_MENU_APP(client));
+  SyncMenuAppPriv * p = client->priv;
 
   if (p->paused != paused)
     {
@@ -471,17 +471,17 @@ sync_client_set_paused (SyncClient * client, gboolean paused)
 }
 
 /**
- * sync_client_set_state:
- * @client: a #SyncClient
- * @state: the client's new #SyncState, such as %SYNC_STATE_IDLE
+ * sync_menu_app_set_state:
+ * @client: a #SyncMenuApp
+ * @state: the client's new #SyncMenuState, such as %SYNC_MENU_STATE_IDLE
  *
- * Sets the client's SyncClient:paused property
+ * Sets the client's SyncMenuApp:paused property
  */
 void
-sync_client_set_state (SyncClient * client, SyncState state)
+sync_menu_app_set_state (SyncMenuApp * client, SyncMenuState state)
 {
-  g_return_if_fail (IS_SYNC_CLIENT(client));
-  SyncClientPriv * p = client->priv;
+  g_return_if_fail (IS_SYNC_MENU_APP(client));
+  SyncMenuAppPriv * p = client->priv;
 
   if (p->state != state)
     {
@@ -491,18 +491,18 @@ sync_client_set_state (SyncClient * client, SyncState state)
 }
 
 /**
- * sync_client_set_menu:
- * @client: a #SyncClient
- * @menu_server: a #DbusmenuServer of the menu to be exported by the #SyncClient
+ * sync_menu_app_set_menu:
+ * @client: a #SyncMenuApp
+ * @menu_server: a #DbusmenuServer of the menu to be exported by the #SyncMenuApp
  *
- * Sets the client's SyncClient:menu-path property specifying which menu
+ * Sets the client's SyncMenuApp:menu-path property specifying which menu
  * to export to the sync indicator.
  */
 void
-sync_client_set_menu (SyncClient * client, DbusmenuServer * menu_server)
+sync_menu_app_set_menu (SyncMenuApp * client, DbusmenuServer * menu_server)
 {
-  g_return_if_fail (IS_SYNC_CLIENT(client));
-  SyncClientPriv * p = client->priv;
+  g_return_if_fail (IS_SYNC_MENU_APP(client));
+  SyncMenuAppPriv * p = client->priv;
 
   if (p->menu_server != menu_server)
     {

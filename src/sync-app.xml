@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <node name="/">
-  <interface name="com.canonical.indicator.sync.client">
+  <interface name="com.canonical.indicator.sync.app">
 
     <!-- Properties -->
 
-      <!-- This client's SyncState. (SYNC_STATE_IDLE, _ERROR, _SYNCING) -->
+      <!-- This app's SyncState. (SYNC_STATE_IDLE, _ERROR, _SYNCING) -->
       <property name="State" type="u" access="read" />
 
-      <!-- This client's .desktop id. (example: "transmission-gtk.desktop") -->
+      <!-- This app's .desktop id. (example: "transmission-gtk.desktop") -->
       <property name="Desktop" type="s" access="read" />
 
-      <!-- The menupath of the dbusmenu that the SyncClient wants to
+      <!-- The menupath of the dbusmenu that the app wants to
            be shown in the Sync Indicator. -->
       <property name="MenuPath" type="s" access="read" />
 
-      <!-- This client's paused state.
+      <!-- This app's paused state.
            NB: end users can use the Sync Indicator to toggle this,
-           so client code needs to listen for this PropertyChange
-           and respond accordingly -->
+           so your app's code needs to listen for this
+           PropertyChange and respond accordingly. -->
       <property name="Paused" type="b" access="readwrite" />
 
     <!-- Signals -->

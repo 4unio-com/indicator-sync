@@ -1,5 +1,5 @@
 /*
-   A service which aggregates all the SyncClients' data together
+   A service which aggregates all the SyncMenuApps' data together
    for consumption by the Sync Indicator
 
    Copyright 2012 Canonical Ltd.
@@ -36,18 +36,19 @@
 
 #include <libindicator/indicator-service.h>
 
+#include "sync-menu/sync-app.h"
+#include "sync-menu/sync-enum.h"
+
 #include "app-menu-item.h"
 #include "dbus-shared.h"
-#include "sync-client.h"
-#include "sync-client-dbus.h"
-#include "sync-enum.h"
+#include "sync-app-dbus.h"
 #include "sync-service-dbus.h"
 
 /***
 ****
 ***/
 
-/* bookkeeping for each SyncClient */
+/* bookkeeping for each SyncMenuApp */
 typedef struct ClientEntry
 {
   gint watch_id;
@@ -57,10 +58,10 @@ typedef struct ClientEntry
   DbusmenuClient * menu_client;
   gulong menu_client_root_handler_id;
 
-  DbusSyncClient * sync_client;
-  gulong sync_client_menu_handler_id;
-  gulong sync_client_state_handler_id;
-  gulong sync_client_paused_handler_id;
+  DbusSyncMenuApp * sync_menu_app;
+  gulong sync_menu_app_menu_handler_id;
+  gulong sync_menu_app_state_handler_id;
+  gulong sync_menu_app_paused_handler_id;
 }
 ClientEntry;
 
@@ -92,14 +93,14 @@ typedef gint (entry_compare_func)(const ClientEntry * entry, gconstpointer key);
 static gint
 entry_compare_to_object_path (const ClientEntry * entry, gconstpointer path)
 {
-  GDBusProxy * proxy = G_DBUS_PROXY (entry->sync_client);
+  GDBusProxy * proxy = G_DBUS_PROXY (entry->sync_menu_app);
 
   return g_strcmp0 (g_dbus_proxy_get_object_path(proxy), path);
 }
 static gint
 entry_compare_to_dbus_name (const ClientEntry * entry, gconstpointer name)
 {
-  GDBusProxy * proxy = G_DBUS_PROXY (entry->sync_client);
+  GDBusProxy * proxy = G_DBUS_PROXY (entry->sync_menu_app);
 
   return g_strcmp0 (g_dbus_proxy_get_name(proxy), name);
 }
@@ -179,20 +180,20 @@ entry_compare_by_appname (gconstpointer ga, gconstpointer gb)
                     app_menu_item_get_name(b->app_menu_item));
 }
 
-static SyncState
+static SyncMenuState
 entry_get_state (ClientEntry * entry)
 {
-  g_return_val_if_fail (entry->sync_client != NULL, SYNC_STATE_IDLE);
+  g_return_val_if_fail (entry->sync_menu_app != NULL, SYNC_MENU_STATE_IDLE);
 
-  return dbus_sync_client_get_state (entry->sync_client);
+  return dbus_sync_menu_app_get_state (entry->sync_menu_app);
 }
 
 static gboolean
 entry_get_paused (ClientEntry * entry)
 {
-  g_return_val_if_fail (entry->sync_client != NULL, FALSE);
+  g_return_val_if_fail (entry->sync_menu_app != NULL, FALSE);
 
-  return dbus_sync_client_get_paused (entry->sync_client);
+  return dbus_sync_menu_app_get_paused (entry->sync_menu_app);
 }
 
 
@@ -248,7 +249,7 @@ service_refresh_menu (SyncService * service)
   GSList * entries;
   g_debug (G_STRLOC" rebuilding the menu");
 
-  /* get an alphabetically sorted list of SyncClients */
+  /* get an alphabetically sorted list of SyncMenuApps */
   entries = g_slist_copy (service->client_entries);
   entries = g_slist_sort (entries, entry_compare_by_appname);
 
@@ -286,28 +287,28 @@ service_refresh_menu (SyncService * service)
   g_object_unref (root);
 }
 
-static SyncState
+static SyncMenuState
 service_calculate_state (SyncService * service)
 {
   GSList * l;
 
   /* if any service is in error state... */
   for (l=service->client_entries; l!=NULL; l=l->next)
-    if (entry_get_state (l->data) == SYNC_STATE_ERROR)
-      return SYNC_STATE_ERROR;
+    if (entry_get_state (l->data) == SYNC_MENU_STATE_ERROR)
+      return SYNC_MENU_STATE_ERROR;
 
   /* otherwise if any service is syncing... */
   for (l=service->client_entries; l!=NULL; l=l->next)
-    if (entry_get_state (l->data) == SYNC_STATE_SYNCING)
-      return SYNC_STATE_SYNCING;
+    if (entry_get_state (l->data) == SYNC_MENU_STATE_SYNCING)
+      return SYNC_MENU_STATE_SYNCING;
 
-  return SYNC_STATE_IDLE;
+  return SYNC_MENU_STATE_IDLE;
 }
 
 static void
 service_refresh_state (SyncService * service)
 {
-  const SyncState new_state = service_calculate_state (service);
+  const SyncMenuState new_state = service_calculate_state (service);
 
   dbus_sync_service_set_state (service->skeleton, new_state);
 }
@@ -377,10 +378,10 @@ entry_free (ClientEntry * entry)
       entry->watch_id = 0;
     }
 
-  signal_handler_clear (entry->sync_client, &entry->sync_client_menu_handler_id);
-  signal_handler_clear (entry->sync_client, &entry->sync_client_state_handler_id);
-  signal_handler_clear (entry->sync_client, &entry->sync_client_paused_handler_id);
-  g_clear_object (&entry->sync_client);
+  signal_handler_clear (entry->sync_menu_app, &entry->sync_menu_app_menu_handler_id);
+  signal_handler_clear (entry->sync_menu_app, &entry->sync_menu_app_state_handler_id);
+  signal_handler_clear (entry->sync_menu_app, &entry->sync_menu_app_paused_handler_id);
+  g_clear_object (&entry->sync_menu_app);
 
   entry_clear_menu_client (entry);
 
@@ -415,7 +416,7 @@ on_client_menu_root_changed (DbusmenuClient    * client,
   ClientEntry * entry = entry_find_from_menu_client (service, client);
   g_return_if_fail (entry != NULL);
 
-  g_debug (G_STRLOC " SyncClient %s changed its menu root",
+  g_debug (G_STRLOC " SyncMenuApp %s changed its menu root",
            app_menu_item_get_name(entry->app_menu_item));
   service_refresh_menu (service);
 }
@@ -425,10 +426,10 @@ entry_create_menu_client (SyncService * service,
                           ClientEntry * entry)
 {
   g_return_if_fail (entry != NULL);
-  g_return_if_fail (entry->sync_client != NULL);
+  g_return_if_fail (entry->sync_menu_app != NULL);
 
-  const gchar * name = g_dbus_proxy_get_name (G_DBUS_PROXY(entry->sync_client));
-  const gchar * path = dbus_sync_client_get_menu_path (entry->sync_client);
+  const gchar * name = g_dbus_proxy_get_name (G_DBUS_PROXY(entry->sync_menu_app));
+  const gchar * path = dbus_sync_menu_app_get_menu_path (entry->sync_menu_app);
   entry->menu_client = dbusmenu_client_new (name, path);
 
   entry->menu_client_root_handler_id = g_signal_connect (
@@ -446,24 +447,24 @@ entry_clear_menu_client (ClientEntry * entry)
 }
 
 static void
-on_sync_client_state_changed (GObject * o, GParamSpec * ps, gpointer service)
+on_sync_menu_app_state_changed (GObject * o, GParamSpec * ps, gpointer service)
 {
   service_refresh_state (service);
 }
 
 static void
-on_sync_client_paused_changed (GObject * o, GParamSpec * ps, gpointer service)
+on_sync_menu_app_paused_changed (GObject * o, GParamSpec * ps, gpointer service)
 {
   service_refresh_paused (service);
 }
 
 static void
-on_sync_client_menu_path_changed (GObject * o, GParamSpec * ps, gpointer gentry)
+on_sync_menu_app_menu_path_changed (GObject * o, GParamSpec * ps, gpointer gentry)
 {
   SyncService * service = &sync_service;
-  DbusSyncClient * sync_client = DBUS_SYNC_CLIENT(o);
+  DbusSyncMenuApp * sync_menu_app = DBUS_SYNC_MENU_APP(o);
   ClientEntry * entry = gentry;
-  g_return_if_fail (sync_client != NULL);
+  g_return_if_fail (sync_menu_app != NULL);
 
   entry_clear_menu_client (entry);
   entry_create_menu_client (service, entry);
@@ -471,7 +472,7 @@ on_sync_client_menu_path_changed (GObject * o, GParamSpec * ps, gpointer gentry)
 }
 
 static void
-on_sync_client_vanished (GDBusConnection * connection  G_GNUC_UNUSED,
+on_sync_menu_app_vanished (GDBusConnection * connection  G_GNUC_UNUSED,
                          const gchar     * dbus_name,
                          gpointer          user_data)
 {
@@ -485,26 +486,26 @@ on_sync_client_vanished (GDBusConnection * connection  G_GNUC_UNUSED,
 }
 
 static ClientEntry *
-entry_new (SyncService * service, DbusSyncClient * sync_client)
+entry_new (SyncService * service, DbusSyncMenuApp * sync_menu_app)
 {
-  GDBusProxy * proxy = G_DBUS_PROXY(sync_client);
+  GDBusProxy * proxy = G_DBUS_PROXY(sync_menu_app);
   ClientEntry * entry = g_new0 (ClientEntry, 1);
 
-  entry->sync_client = sync_client;
+  entry->sync_menu_app = sync_menu_app;
 
   entry->app_menu_item = app_menu_item_new (proxy);
 
-  entry->sync_client_menu_handler_id = g_signal_connect (
+  entry->sync_menu_app_menu_handler_id = g_signal_connect (
     proxy, "notify::menu-path",
-    G_CALLBACK(on_sync_client_menu_path_changed), entry);
+    G_CALLBACK(on_sync_menu_app_menu_path_changed), entry);
 
-  entry->sync_client_state_handler_id = g_signal_connect (
+  entry->sync_menu_app_state_handler_id = g_signal_connect (
     proxy, "notify::state",
-    G_CALLBACK(on_sync_client_state_changed), service);
+    G_CALLBACK(on_sync_menu_app_state_changed), service);
 
-  entry->sync_client_paused_handler_id = g_signal_connect (
+  entry->sync_menu_app_paused_handler_id = g_signal_connect (
     proxy, "notify::paused",
-    G_CALLBACK(on_sync_client_paused_changed), service);
+    G_CALLBACK(on_sync_menu_app_paused_changed), service);
 
   entry_create_menu_client (service, entry);
 
@@ -512,7 +513,7 @@ entry_new (SyncService * service, DbusSyncClient * sync_client)
     g_dbus_proxy_get_connection (proxy),
     g_dbus_proxy_get_name (proxy),
     G_BUS_NAME_WATCHER_FLAGS_NONE,
-    NULL, on_sync_client_vanished,
+    NULL, on_sync_menu_app_vanished,
     service, NULL);
 
   g_debug (G_STRLOC" created a new proxy for '%s', watch id is %d",
@@ -522,7 +523,7 @@ entry_new (SyncService * service, DbusSyncClient * sync_client)
 }
 
 static void
-on_sync_client_exists (GDBusConnection * connection,
+on_sync_menu_app_exists (GDBusConnection * connection,
                        const gchar     * sender,
                        const gchar     * object,
                        const gchar     * interface,
@@ -546,7 +547,7 @@ on_sync_client_exists (GDBusConnection * connection,
  
   GError * err = NULL;
   g_debug (G_STRLOC" ...which is new to us! Let's add it to our list.");
-  DbusSyncClient * proxy = dbus_sync_client_proxy_new_sync (
+  DbusSyncMenuApp * proxy = dbus_sync_menu_app_proxy_new_sync (
                              connection,
                              G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES,
                              sender,
@@ -594,17 +595,17 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
           g_clear_error (&err);
         }
 
-      /* listen for SyncClients to show up on the bus */
-      g_debug (G_STRLOC" listening to Exists from %s", SYNC_CLIENT_DBUS_IFACE);
+      /* listen for SyncMenuApps to show up on the bus */
+      g_debug (G_STRLOC" listening to Exists from %s", SYNC_MENU_APP_DBUS_IFACE);
       service->signal_subscription = g_dbus_connection_signal_subscribe (
                                        connection,
                                        NULL, /* sender */
-                                       SYNC_CLIENT_DBUS_IFACE,
+                                       SYNC_MENU_APP_DBUS_IFACE,
                                        "Exists",
                                        NULL, /* path */
                                        NULL, /* arg0 */
                                        G_DBUS_SIGNAL_FLAGS_NONE,
-                                       on_sync_client_exists,
+                                       on_sync_menu_app_exists,
                                        service,
                                        NULL); /* destroy notify */
 

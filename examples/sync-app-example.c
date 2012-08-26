@@ -18,14 +18,15 @@
 */
 
 #include <glib.h>
+
 #include <libdbusmenu-glib/server.h>
-#include "indicator-sync/sync-client.h"
-#include "indicator-sync/sync-enum.h"
+
+#include <sync-menu/sync-app.h>
 
 static gboolean paused = FALSE;
 static gboolean pretend_error = FALSE;
 static int syncing_file_count = 0;
-static SyncClient * sync_client = NULL;
+static SyncMenuApp * sync_menu_app = NULL;
 
 /***
 ****
@@ -36,15 +37,15 @@ state_refresh (void)
 {
   if (pretend_error)
     {
-      sync_client_set_state (sync_client, SYNC_STATE_ERROR);
+      sync_menu_app_set_state (sync_menu_app, SYNC_MENU_STATE_ERROR);
     }
   else if (!paused && (syncing_file_count > 0))
     {
-      sync_client_set_state (sync_client, SYNC_STATE_SYNCING);
+      sync_menu_app_set_state (sync_menu_app, SYNC_MENU_STATE_SYNCING);
     }
   else
     {
-      sync_client_set_state (sync_client, SYNC_STATE_IDLE);
+      sync_menu_app_set_state (sync_menu_app, SYNC_MENU_STATE_IDLE);
     }
 }
 
@@ -64,14 +65,14 @@ on_menuitem_clicked (DbusmenuMenuitem  * mi,
              timestamp);
 }
 
-/* Called when the sync client's 'paused' state changes,
+/* Called when the sync app's 'paused' state changes,
  * such as when a human clicks on our app's name in the sync indicator */
 static void
-on_sync_client_paused_changed (SyncClient   * sync_client,
-                               GParamSpec   * pspec         G_GNUC_UNUSED,
-                               const gchar  * name          G_GNUC_UNUSED)
+on_sync_menu_app_paused_changed (SyncMenuApp  * sync_menu_app,
+                            GParamSpec   * pspec         G_GNUC_UNUSED,
+                            const gchar  * name          G_GNUC_UNUSED)
 {
-  paused = sync_client_get_paused (sync_client);
+  paused = sync_menu_app_get_paused (sync_menu_app);
 
   if (paused)
     {
@@ -90,11 +91,11 @@ on_sync_client_paused_changed (SyncClient   * sync_client,
 static gboolean
 on_file_sync_timer (DbusmenuMenuitem * mi)
 {
-  const gchar * key = SYNC_PROGRESS_MENUITEM_PROP_PERCENT_DONE;
+  const gchar * key = SYNC_MENU_PROGRESS_MENUITEM_PROP_PERCENT_DONE;
   int percent = dbusmenu_menuitem_property_get_int (mi, key);
   gboolean done = percent == 100;
 
-  /* if the client's not paused, pretend we got a little further in our sync */
+  /* if the app's not paused, pretend we got a little further in our sync */
   if (!paused && !pretend_error && !done)
     {
       const int increment = 1 + g_random_int()%10;
@@ -125,7 +126,7 @@ on_pretend_error_toggled (DbusmenuMenuitem  * mi,
   checked = !checked;
   dbusmenu_menuitem_property_set_int (mi, key, checked);
  
-  /* update our client state */
+  /* update our app's state */
   pretend_error = checked;
   state_refresh ();
 }
@@ -135,7 +136,7 @@ on_pretend_error_toggled (DbusmenuMenuitem  * mi,
 ***/
 
 static void
-create_u1_sync_client (void)
+create_u1_sync_menu_app (void)
 {
   DbusmenuMenuitem *root, *mi, *files;
 
@@ -176,12 +177,12 @@ create_u1_sync_client (void)
       DbusmenuMenuitem * file = dbusmenu_menuitem_new ();
       dbusmenu_menuitem_property_set (file,
                                       DBUSMENU_MENUITEM_PROP_TYPE,
-                                      SYNC_PROGRESS_MENUITEM_TYPE);
+                                      SYNC_MENU_PROGRESS_MENUITEM_TYPE);
       dbusmenu_menuitem_property_set (file,
                                       DBUSMENU_MENUITEM_PROP_LABEL,
                                       filenames[i]);
       dbusmenu_menuitem_property_set_int (file,
-                                          SYNC_PROGRESS_MENUITEM_PROP_PERCENT_DONE,
+                                          SYNC_MENU_PROGRESS_MENUITEM_PROP_PERCENT_DONE,
                                           g_random_int() % 100);
       g_signal_connect (file, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                         G_CALLBACK(on_menuitem_clicked), NULL);
@@ -200,18 +201,18 @@ create_u1_sync_client (void)
   **/
 
   const gchar * desktop = "ubuntuone-installer.desktop";
-  sync_client = sync_client_new (desktop);
-  sync_client_set_menu (sync_client, dmserver);
+  sync_menu_app = sync_menu_app_new (desktop);
+  sync_menu_app_set_menu (sync_menu_app, dmserver);
   state_refresh ();
-  g_signal_connect (sync_client, "notify::paused",
-                    G_CALLBACK(on_sync_client_paused_changed), (gpointer)desktop);
+  g_signal_connect (sync_menu_app, "notify::paused",
+                    G_CALLBACK(on_sync_menu_app_paused_changed), (gpointer)desktop);
 }
 
 int
 main (void)
 {
   g_type_init ();
-  create_u1_sync_client ();
+  create_u1_sync_menu_app ();
   g_main_loop_run (g_main_loop_new(NULL, FALSE));
   return 0;
 }

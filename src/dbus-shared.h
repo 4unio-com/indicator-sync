@@ -28,7 +28,7 @@
 #define  SYNC_SERVICE_DBUS_OBJECT       "/com/canonical/indicator/sync/service"
 #define  SYNC_SERVICE_DBUS_MENU_OBJECT  "/com/canonical/indicator/sync/menu"
 
-#define  SYNC_CLIENT_DBUS_IFACE          "com.canonical.indicator.sync.client"
+#define  SYNC_MENU_APP_DBUS_IFACE        "com.canonical.indicator.sync.app"
 
 #define APPLICATION_MENUITEM_TYPE        "application-item"
 #define APPLICATION_MENUITEM_PROP_NAME   "label"

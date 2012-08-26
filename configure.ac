@@ -1,20 +1,20 @@
-AC_INIT(indicator-sync, 12.10.0)
+AC_INIT([indicator-sync],[12.10.0])
+AC_CONFIG_SRCDIR([src/dbus-shared.h])
+AM_INIT_AUTOMAKE
 
 AC_PREREQ(2.53)
 
-AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE()
+AC_CONFIG_HEADERS([config.h])
 
 AM_MAINTAINER_MODE
 
 IT_PROG_INTLTOOL([0.35.0])
 
-AC_ISC_POSIX
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_STDC_HEADERS
+AC_HEADER_STDC
 AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_SUBST(VERSION)
 AC_CONFIG_MACRO_DIR([m4])
@@ -22,9 +22,6 @@ AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_PATH_PROG([GLIB_MKENUMS], [glib-mkenums])
-
-# the Google Test targets are cpp
-AC_PROG_CXX
 
 
 ###########################
@@ -55,29 +52,29 @@ DBUSMENUGLIB_REQUIRED_VERSION=.0.6.2
 DBUSMENUGTK_REQUIRED_VERSION=0.5.90
 GLIB_REQUIRED_VERSION=2.32.0
 
-PKG_CHECK_MODULES(SYNC_CLIENT, [dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                gio-unix-2.0      >= $GIO_UNIX_REQUIRED_VERSION
-                                glib-2.0          >= $GLIB_REQUIRED_VERSION
-                                gmodule-2.0       >= $GLIB_REQUIRED_VERSION])
-AC_SUBST(SYNC_CLIENT_CFLAGS)
-AC_SUBST(SYNC_CLIENT_LIBS)
+PKG_CHECK_MODULES(SYNC_LIB_DEPS, [dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
+                                   gio-unix-2.0      >= $GIO_UNIX_REQUIRED_VERSION
+                                   glib-2.0          >= $GLIB_REQUIRED_VERSION
+                                   gmodule-2.0       >= $GLIB_REQUIRED_VERSION])
+AC_SUBST(SYNC_LIB_DEPS_CFLAGS)
+AC_SUBST(SYNC_LIB_DEPS_LIBS)
 
-PKG_CHECK_MODULES(SYNC_SERVICE, [indicator3-0.4    >= $INDICATOR_REQUIRED_VERSION
+PKG_CHECK_MODULES(SERVICE_DEPS, [indicator3-0.4    >= $INDICATOR_REQUIRED_VERSION
                                  dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
                                  gio-unix-2.0      >= $GIO_UNIX_REQUIRED_VERSION
                                  glib-2.0          >= $GLIB_REQUIRED_VERSION
                                  gmodule-2.0       >= $GLIB_REQUIRED_VERSION])
-AC_SUBST(SYNC_SERVICE_CFLAGS)
-AC_SUBST(SYNC_SERVICE_LIBS)
+AC_SUBST(SERVICE_DEPS_CFLAGS)
+AC_SUBST(SERVICE_DEPS_LIBS)
 
-PKG_CHECK_MODULES(SYNC_INDICATOR, [libido3-0.1          >= $IDO_REQUIRED_VERSION
+PKG_CHECK_MODULES(INDICATOR_DEPS, [libido3-0.1          >= $IDO_REQUIRED_VERSION
                                    indicator3-0.4       >= $INDICATOR_REQUIRED_VERSION
                                    dbusmenu-gtk3-0.4    >= $DBUSMENUGTK_REQUIRED_VERSION
                                    gtk+-3.0             >= $GTK_REQUIRED_VERSION
                                    glib-2.0             >= $GLIB_REQUIRED_VERSION
                                    gmodule-2.0          >= $GLIB_REQUIRED_VERSION])
-AC_SUBST(SYNC_INDICATOR_CFLAGS)
-AC_SUBST(SYNC_INDICATOR_LIBS)
+AC_SUBST(INDICATOR_DEPS_CFLAGS)
+AC_SUBST(INDICATOR_DEPS_LIBS)
 
 ###########################
 # gcov coverage reporting
@@ -101,6 +98,7 @@ AC_ARG_ENABLE([tests],
     [enable_tests=${enableval}],
     [enable_tests=auto])
 if test "x$enable_tests" != "xno"; then
+    AC_PROG_CXX
     m4_include([m4/gtest.m4])
     CHECK_GTEST
     if test "x$enable_tests" = "xauto"; then
@@ -116,7 +114,10 @@ AM_CONDITIONAL([BUILD_TESTS],[test "x$enable_tests" = "xyes"])
 ###########################
 
 with_localinstall="no"
-AC_ARG_ENABLE(localinstall, AS_HELP_STRING([--enable-localinstall], [install all of the files localy instead of system directories (for distcheck)]), with_localinstall=$enableval, with_localinstall=no)
+AC_ARG_ENABLE([localinstall],
+              [AS_HELP_STRING([--enable-localinstall], [install all of the files localy instead of system directories (for distcheck)])],
+              [with_localinstall=$enableval],
+              [with_localinstall=no])
 
 ###########################
 # Indicator Info
@@ -174,18 +175,20 @@ AM_GLIB_GNU_GETTEXT
 # Files
 ###########################
 
-AM_CONDITIONAL([HAS_PYTHON], [test "x$have_python" = "xyes"])
-
-AC_OUTPUT([Makefile
-           indicator-sync/Makefile
-           indicator-sync/indicator-sync-client-0.1.pc.in
-           data/Makefile
-           data/icons/Makefile
-           data/icons/22x22/Makefile
-           data/icons/22x22/status/Makefile
-           examples/Makefile
-           test/Makefile
-           po/Makefile.in])
+AC_CONFIG_FILES([Makefile
+                 src/Makefile
+                 src/sync-menu/Makefile
+                 src/sync-menu/sync-menu-0.1.pc
+                 src/service/Makefile
+                 src/indicator/Makefile
+                 data/Makefile
+                 data/icons/Makefile
+                 data/icons/22x22/Makefile
+                 data/icons/22x22/status/Makefile
+                 examples/Makefile
+                 test/Makefile
+                 po/Makefile.in])
+AC_OUTPUT
 
 ###########################
 # Results
@@ -197,7 +200,7 @@ Sync Indicator Configuration:
 
 	Prefix:           $prefix
 	Indicator Dir:    $INDICATORDIR
-	Python Bindings:  $have_python
 	gtest:            $enable_tests
 	gcov:             $use_gcov
+	introspection:    $enable_introspection
 ])
