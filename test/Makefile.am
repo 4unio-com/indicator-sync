@@ -1,5 +1,6 @@
 TESTS =
 CLEANFILES =
+check_PROGRAMS =
 
 ###
 ###
@@ -16,3 +17,26 @@ nodist_libgtest_a_SOURCES = \
 
 AM_CPPFLAGS = $(GTEST_CPPFLAGS) $(SHARED_CPPFLAGS)
 AM_CXXFLAGS = $(GTEST_CXXFLAGS)
+
+###
+###
+###
+
+TESTS += test-client
+check_PROGRAMS += test-client
+
+test_client_SOURCES = \
+  $(top_builddir)/src/sync-service-dbus.c \
+  test-client.cpp
+
+test_client_LDADD = \
+  $(top_builddir)/src/sync-menu/.libs/libsync-menu.la \
+  $(SYNC_LIB_DEPS_LIBS) \
+  libgtest.a
+
+test_client_CPPFLAGS = \
+  -DINDICATOR_SERVICE_DIR="\"$(abs_builddir)\"" \
+  -I$(top_srcdir)/src/ \
+  -I$(top_builddir)/src/ \
+  $(SYNC_LIB_DEPS_CFLAGS) \
+  $(AM_CPPFLAGS)
