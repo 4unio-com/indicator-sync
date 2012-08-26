@@ -187,6 +187,7 @@ AC_CONFIG_FILES([Makefile
                  data/icons/22x22/status/Makefile
                  examples/Makefile
                  test/Makefile
+                 test/indicator-sync.service
                  po/Makefile.in])
 AC_OUTPUT
 
