@@ -266,7 +266,8 @@ service_refresh_menu (SyncService * service)
       dbusmenu_menuitem_child_append (root, mi);
 
       /* add the client's custom menuitems */
-      service_menu_append_client_menu (root, entry->menu_client);
+      if (entry->menu_client != NULL)
+        service_menu_append_client_menu (root, entry->menu_client);
 
       /* add a separator before the next client */
       if (l->next != NULL)
