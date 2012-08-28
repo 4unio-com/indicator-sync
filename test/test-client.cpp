@@ -29,6 +29,7 @@ class ClientTest : public ::testing::Test
       if (!ran_once_init)
         {
           g_type_init();
+          g_unsetenv ("INDICATOR_ALLOW_NO_WATCHERS");
           g_unsetenv ("INDICATOR_SERVICE_REPLACE_MODE");
           ran_once_init = true;
         }
@@ -115,6 +116,8 @@ class ClientTest : public ::testing::Test
               G_DBUS_CALL_FLAGS_NONE,
               -1, NULL, &err);
       g_clear_pointer (&ret, g_variant_unref);
+      if (err != NULL)
+        g_error ("Unable to connect to %s: %s", SYNC_SERVICE_DBUS_NAME, err->message);
 
       ASSERT_TRUE (err == NULL);
     }
