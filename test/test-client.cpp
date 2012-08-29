@@ -9,6 +9,9 @@
 #include "sync-service-dbus.h"
 #include "sync-menu/sync-app.h"
 
+#define INDICATOR_SERVICE_OBJECT_PATH "/org/ayatana/indicator/service"
+#define INDICATOR_SERVICE_INTERFACE_NAME "org.ayatana.indicator.service"
+
 class ClientTest : public ::testing::Test
 {
   protected:
@@ -98,7 +101,7 @@ class ClientTest : public ::testing::Test
       return is_owned;
     }
 
-    void ServiceProxyShutdown ()
+    void CallIndicatorServiceMethod (const gchar * method)
     {
       GError * err;
       GVariant * ret;
@@ -111,19 +114,24 @@ class ClientTest : public ::testing::Test
       ret = g_dbus_connection_call_sync (
               session_bus,
               SYNC_SERVICE_DBUS_NAME,
-              "/org/ayatana/indicator/service",
-              "org.ayatana.indicator.service",
-              "Shutdown", NULL,
+              INDICATOR_SERVICE_OBJECT_PATH,
+              INDICATOR_SERVICE_INTERFACE_NAME,
+              method, NULL,
               NULL,
               G_DBUS_CALL_FLAGS_NONE,
               -1, NULL, &err);
       g_clear_pointer (&ret, g_variant_unref);
       if (err != NULL)
-        g_error ("Unable to connect to %s: %s", SYNC_SERVICE_DBUS_NAME, err->message);
+        g_error ("Error calling \"%s\": %s", method, err->message);
 
       ASSERT_TRUE (err == NULL);
+    }
 
+    void ServiceProxyShutdown ()
+    {
+      CallIndicatorServiceMethod ("Shutdown");
       WaitForSignal (service_proxy, "notify::g-name-owner");
+
       ASSERT_FALSE (ServiceProxyIsOwned ());
     }
 
@@ -177,67 +185,158 @@ TEST_F (ClientTest, AppCanStartService)
   g_clear_object (&app);
 }
 
-/* wow this next test is not ready yet
-   but I'm at a good stopping point for the night...
-   I'll just disable it and commit */
-#if 0
-TEST_F(ClientTest, ServiceCountsClients)
+/***
+****  Add a handful of SyncMenuApps & confirm that the service counts them
+***/
+
+TEST_F (ClientTest, TestClientCount)
 {
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
-  // start up the service
+  SyncMenuApp * app[3];
+
+  ASSERT_TRUE (service_proxy == NULL);
   SetUpServiceProxy (true);
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
   ASSERT_TRUE (ServiceProxyIsOwned ());
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
-  ASSERT_EQ (0, dbus_sync_service_get_client_count (service_proxy));
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
 
-  // add a client
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
-  SyncMenuApp * app_1 = sync_menu_app_new ("transmission-gtk.desktop");
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
+  app[0] = sync_menu_app_new ("a.desktop");
   WaitForSignal (service_proxy, "notify::client-count");
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
-  ASSERT_TRUE (ServiceProxyIsOwned ());
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
   ASSERT_EQ (1, dbus_sync_service_get_client_count (service_proxy));
-      g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
- 
-  // remove the client
-g_message (G_STRLOC" ... count is %d", dbus_sync_service_get_client_count(service_proxy));
-g_clear_object (&app_1); 
+
+  app[1] = sync_menu_app_new ("b.desktop");
   WaitForSignal (service_proxy, "notify::client-count");
-//  ASSERT_TRUE (ServiceProxyIsOwned ());
-  ASSERT_EQ (0, dbus_sync_service_get_client_count (service_proxy));
+  ASSERT_EQ (2, dbus_sync_service_get_client_count (service_proxy));
 
-#if 0
-  //client_2 = sync_client_new ("ubuntuone-installer.desktop");
-  //WaitForSignal (service_proxy, "notify::client-count");
-  //ASSERT_EQ (2, dbus_sync_service_get_client_count (service_proxy));
-
-g_message (G_STRLOC" ... count is %d", dbus_sync_service_get_client_count(service_proxy));
-//g_message (G_STRLOC" unreffing client_2");
- // g_clear_object (&client_2);
-g_message (G_STRLOC" ... count is %d", dbus_sync_service_get_client_count(service_proxy));
+  app[2] = sync_menu_app_new ("c.desktop");
   WaitForSignal (service_proxy, "notify::client-count");
-g_message (G_STRLOC" ... count is %d", dbus_sync_service_get_client_count(service_proxy));
-  ASSERT_EQ (1, dbus_sync_service_get_client_count (service_proxy));
-g_message (G_STRLOC" ... count is %d", dbus_sync_service_get_client_count(service_proxy));
+  ASSERT_EQ (3, dbus_sync_service_get_client_count (service_proxy));
 
-g_message (G_STRLOC" unreffing client_1");
-  g_clear_object (&client_1);
-g_message (G_STRLOC);
-  WaitForSignal (service_proxy, "notify::client-count");
-g_message (G_STRLOC);
-  ASSERT_EQ (0, dbus_sync_service_get_client_count (service_proxy));
-g_message (G_STRLOC);
-#endif
-
-g_message (G_STRLOC);
-  ServiceProxyShutdown ();
-g_message (G_STRLOC);
+  g_clear_object (&app[2]);
+  g_clear_object (&app[1]);
+  g_clear_object (&app[0]);
   TearDownServiceProxy ();
-//g_message (G_STRLOC);
-  //g_clear_object (&client_1);
 }
-#endif
+
+/***
+****  Confirm that the service's 'paused' property is true
+****  iff any of the clients are paused
+***/
+
+TEST_F (ClientTest, TestPaused)
+{
+  /* start up the service */
+  ASSERT_TRUE (service_proxy == NULL);
+  SetUpServiceProxy (true);
+  ASSERT_TRUE (ServiceProxyIsOwned ());
+
+  /* add three SyncMenuApps */
+  SyncMenuApp * app[3];
+  app[0] = sync_menu_app_new ("a.desktop");
+  app[1] = sync_menu_app_new ("b.desktop");
+  app[2] = sync_menu_app_new ("c.desktop");
+  while (dbus_sync_service_get_client_count (service_proxy) != 3)
+    WaitForSignal (service_proxy, "notify::client-count");
+
+  /* confirm that setting any one of the SyncMenuApps
+     to paused will set the service's "Paused" property */
+  ASSERT_FALSE (dbus_sync_service_get_paused (service_proxy));
+  for (int i=0; i<3; i++)
+    {
+      sync_menu_app_set_paused (app[i], true);
+      WaitForSignal (service_proxy, "notify::paused");
+      ASSERT_TRUE (dbus_sync_service_get_paused (service_proxy));
+
+      sync_menu_app_set_paused (app[i], false);
+      WaitForSignal (service_proxy, "notify::paused");
+      ASSERT_FALSE (dbus_sync_service_get_paused (service_proxy));
+    }
+
+  /* cleanup */
+  g_clear_object (&app[2]);
+  g_clear_object (&app[1]);
+  g_clear_object (&app[0]);
+  TearDownServiceProxy ();
+}
+
+/***
+****  Test that SyncService correctly reports the right SyncMenuState
+****  based on the SyncMenuApps that are connected to it
+***/
+
+TEST_F (ClientTest, TestState)
+{
+  /* start up the service */
+  ASSERT_TRUE (service_proxy == NULL);
+  SetUpServiceProxy (true);
+  ASSERT_TRUE (ServiceProxyIsOwned ());
+
+  /* add three SyncMenuApps */
+  SyncMenuApp * app[3];
+  app[0] = sync_menu_app_new ("a.desktop");
+  app[1] = sync_menu_app_new ("b.desktop");
+  app[2] = sync_menu_app_new ("c.desktop");
+  while (dbus_sync_service_get_client_count (service_proxy) != 3)
+    WaitForSignal (service_proxy, "notify::client-count");
+
+  /* the default state is "idle" */
+  ASSERT_TRUE (sync_menu_app_get_state (app[0]) == SYNC_MENU_STATE_IDLE);
+  ASSERT_TRUE (sync_menu_app_get_state (app[1]) == SYNC_MENU_STATE_IDLE);
+  ASSERT_TRUE (sync_menu_app_get_state (app[2]) == SYNC_MENU_STATE_IDLE);
+  ASSERT_TRUE (dbus_sync_service_get_state (service_proxy) == SYNC_MENU_STATE_IDLE);
+
+  /* test all the state combinations for three SyncMenuApps */
+  const SyncMenuState test_states[27][4] =
+  {
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING },
+
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING },
+
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_IDLE,    SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_ERROR },
+    { SYNC_MENU_STATE_ERROR,   SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_SYNCING, SYNC_MENU_STATE_ERROR }
+  };
+
+  for (int i=0; i<27; i++)
+    {
+      /* set the three apps' states */
+      for (int j=0; j<3; j++)
+        {
+          SyncMenuApp * a = app[j];
+          const SyncMenuState state = test_states[i][j];
+          sync_menu_app_set_state (a, state);
+          ASSERT_EQ (state, sync_menu_app_get_state(a));
+        }
+
+      /* test to see the service's state reflects */
+      const SyncMenuState expected = test_states[i][3];
+      if (dbus_sync_service_get_state (service_proxy) != expected)
+        WaitForSignal (service_proxy, "notify::state");
+      ASSERT_EQ (expected, dbus_sync_service_get_state (service_proxy));
+    }
+
+  /* cleanup */
+  g_clear_object (&app[2]);
+  g_clear_object (&app[1]);
+  g_clear_object (&app[0]);
+  TearDownServiceProxy ();
+}
