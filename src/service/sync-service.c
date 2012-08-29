@@ -431,13 +431,21 @@ entry_create_menu_client (SyncService * service,
 
   const gchar * name = g_dbus_proxy_get_name (G_DBUS_PROXY(entry->sync_menu_app));
   const gchar * path = dbus_sync_menu_app_get_menu_path (entry->sync_menu_app);
-  entry->menu_client = dbusmenu_client_new (name, path);
 
-  entry->menu_client_root_handler_id = g_signal_connect (
-                                        entry->menu_client,
-                                        DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED,
-                                        G_CALLBACK(on_client_menu_root_changed),
-                                        service);
+  if (name && *name && path && *path)
+    {
+      DbusmenuClient * client;
+      gulong id;
+
+      client = dbusmenu_client_new (name, path);
+      id = g_signal_connect (client,
+                             DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED,
+                             G_CALLBACK(on_client_menu_root_changed),
+                             service);
+
+      entry->menu_client = client;
+      entry->menu_client_root_handler_id = id;
+    }
 }
 
 static void
