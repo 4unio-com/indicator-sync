@@ -122,9 +122,10 @@ class ClientTest : public ::testing::Test
               -1, NULL, &err);
       g_clear_pointer (&ret, g_variant_unref);
       if (err != NULL)
-        g_error ("Error calling \"%s\": %s", method, err->message);
+          g_warning ("Error calling \"%s\": %s", method, err->message);
 
-      ASSERT_TRUE (err == NULL);
+      EXPECT_TRUE (err == NULL);
+      g_clear_error (&err);
     }
 
     void ServiceProxyShutdown ()
