@@ -82,6 +82,7 @@ class ClientTest : public ::testing::Test
         g_error ("unable to create service proxy: %s", err->message);
       g_debug (G_STRLOC" the service proxy %p refcount is %d", service_proxy, G_OBJECT(service_proxy)->ref_count);
       g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
+      g_debug (G_STRLOC" proxy's name owner is \"%s\"", g_dbus_proxy_get_name_owner(G_DBUS_PROXY(service_proxy)));
 
       ASSERT_TRUE (err == NULL);
       ASSERT_EQ (dbus_sync_service_get_client_count (service_proxy), 0);
@@ -104,6 +105,7 @@ class ClientTest : public ::testing::Test
 
       ASSERT_TRUE (session_bus != NULL);
       ASSERT_TRUE (service_proxy != NULL);
+      ASSERT_TRUE (ServiceProxyIsOwned ());
 
       err = NULL;
       ret = g_dbus_connection_call_sync (
@@ -120,12 +122,18 @@ class ClientTest : public ::testing::Test
         g_error ("Unable to connect to %s: %s", SYNC_SERVICE_DBUS_NAME, err->message);
 
       ASSERT_TRUE (err == NULL);
+
+      WaitForSignal (service_proxy, "notify::g-name-owner");
+      ASSERT_FALSE (ServiceProxyIsOwned ());
     }
 
     // undo SetUpServiceProxy
     void TearDownServiceProxy ()
     {
       ASSERT_TRUE (service_proxy != NULL);
+
+      if (ServiceProxyIsOwned ())
+          ServiceProxyShutdown ();
 
       g_clear_object (&service_proxy);
     }
@@ -145,8 +153,7 @@ class ClientTest : public ::testing::Test
 ****
 ***/
 
-
-TEST_F(ClientTest, TestCanStartService)
+TEST_F (ClientTest, TestCanStartService)
 {
   ASSERT_TRUE (service_proxy == NULL);
   SetUpServiceProxy (true);
@@ -154,8 +161,7 @@ TEST_F(ClientTest, TestCanStartService)
   TearDownServiceProxy ();
 }
 
-
-TEST_F(ClientTest, AppCanStartService)
+TEST_F (ClientTest, AppCanStartService)
 {
   SyncMenuApp * app;
   SetUpServiceProxy (false);
@@ -166,11 +172,6 @@ TEST_F(ClientTest, AppCanStartService)
 
   WaitForSignal (service_proxy, "notify::client-count");
   ASSERT_EQ (1, dbus_sync_service_get_client_count (service_proxy));
-
-  ServiceProxyShutdown ();
-  WaitForSignal (service_proxy, "notify::g-name-owner");
-  ASSERT_FALSE (ServiceProxyIsOwned ());
-  ASSERT_EQ (0, dbus_sync_service_get_client_count (service_proxy));
 
   TearDownServiceProxy ();
   g_clear_object (&app);
