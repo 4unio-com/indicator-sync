@@ -623,14 +623,6 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
     }
 }
 
-static void 
-service_shutdown (IndicatorService * service G_GNUC_UNUSED, gpointer user_data)
-{
-  SyncService * sync_service = user_data;
-  g_debug ("sync-service shutting down by request");
-  g_main_loop_quit (sync_service->mainloop);
-}
-
 int
 main (int argc, char ** argv)
 {
@@ -645,11 +637,6 @@ main (int argc, char ** argv)
   sync_service.indicator_service =
     indicator_service_new_version (SYNC_SERVICE_DBUS_NAME, 1);
 
-  g_signal_connect (sync_service.indicator_service,
-                    INDICATOR_SERVICE_SIGNAL_SHUTDOWN,
-                    G_CALLBACK(service_shutdown),
-                    &sync_service);
-
   sync_service.skeleton = dbus_sync_service_skeleton_new ();
 
   g_bus_get (G_BUS_TYPE_SESSION, NULL, on_got_bus, &sync_service);
@@ -658,6 +645,10 @@ main (int argc, char ** argv)
 
   /* the main loop */
   sync_service.mainloop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect_swapped (sync_service.indicator_service,
+                            INDICATOR_SERVICE_SIGNAL_SHUTDOWN,
+                            G_CALLBACK(g_main_loop_quit),
+                            sync_service.mainloop);
   g_main_loop_run (sync_service.mainloop);
 
   /* cleanup */
