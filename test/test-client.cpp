@@ -104,14 +104,12 @@ class ClientTest : public ::testing::Test
 
     void CallIndicatorServiceMethod (const gchar * method)
     {
-      GError * err;
       GVariant * ret;
 
       ASSERT_TRUE (session_bus != NULL);
       ASSERT_TRUE (service_proxy != NULL);
       ASSERT_TRUE (ServiceProxyIsOwned ());
 
-      err = NULL;
       ret = g_dbus_connection_call_sync (
               session_bus,
               SYNC_SERVICE_DBUS_NAME,
@@ -120,13 +118,9 @@ class ClientTest : public ::testing::Test
               method, NULL,
               NULL,
               G_DBUS_CALL_FLAGS_NONE,
-              -1, NULL, &err);
+              -1, NULL, NULL);
+
       g_clear_pointer (&ret, g_variant_unref);
-      if (err != NULL)
-        {
-          g_warning ("Error calling \"%s\": %s", method, err->message);
-          g_clear_error (&err);
-        }
     }
 
     void ServiceProxyShutdown ()
