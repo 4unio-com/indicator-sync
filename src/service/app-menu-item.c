@@ -316,11 +316,11 @@ app_menu_item_get_name (AppMenuItem * appitem)
 */
 
 static gchar*
-get_iconstr (const gchar * desktop_filename, GAppInfo * appinfo)
+get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
 {
   gchar * iconstr = NULL;
 
-  if (iconstr == NULL)
+  if ((iconstr == NULL) && (desktop_filename != NULL))
     {
       /* see if the .desktop file has an entry specifying its sync menu icon */
       GKeyFile * keyfile = g_key_file_new ();
@@ -331,9 +331,9 @@ get_iconstr (const gchar * desktop_filename, GAppInfo * appinfo)
       g_key_file_free (keyfile);
     }
 
-  if (iconstr == NULL)
+  if ((iconstr == NULL) && (app_info != NULL))
     {
-      GIcon * icon = g_app_info_get_icon (appinfo);
+      GIcon * icon = g_app_info_get_icon (app_info);
       iconstr = g_icon_to_string (icon);
     }
 

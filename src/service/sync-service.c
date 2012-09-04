@@ -266,7 +266,8 @@ service_refresh_menu (SyncService * service)
       dbusmenu_menuitem_child_append (root, mi);
 
       /* add the client's custom menuitems */
-      service_menu_append_client_menu (root, entry->menu_client);
+      if (entry->menu_client != NULL)
+        service_menu_append_client_menu (root, entry->menu_client);
 
       /* add a separator before the next client */
       if (l->next != NULL)
@@ -430,13 +431,21 @@ entry_create_menu_client (SyncService * service,
 
   const gchar * name = g_dbus_proxy_get_name (G_DBUS_PROXY(entry->sync_menu_app));
   const gchar * path = dbus_sync_menu_app_get_menu_path (entry->sync_menu_app);
-  entry->menu_client = dbusmenu_client_new (name, path);
 
-  entry->menu_client_root_handler_id = g_signal_connect (
-                                        entry->menu_client,
-                                        DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED,
-                                        G_CALLBACK(on_client_menu_root_changed),
-                                        service);
+  if (name && *name && path && *path)
+    {
+      DbusmenuClient * client;
+      gulong id;
+
+      client = dbusmenu_client_new (name, path);
+      id = g_signal_connect (client,
+                             DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED,
+                             G_CALLBACK(on_client_menu_root_changed),
+                             service);
+
+      entry->menu_client = client;
+      entry->menu_client_root_handler_id = id;
+    }
 }
 
 static void
@@ -580,9 +589,17 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
     {
       g_error ("unable to get bus: %s", err->message);
       g_clear_error (&err);
+      g_main_loop_quit (sync_service.mainloop);
     }
   else
     {
+      service->indicator_service = indicator_service_new_version (SYNC_SERVICE_DBUS_NAME,
+                                                                  1);
+      g_signal_connect_swapped (sync_service.indicator_service,
+                                INDICATOR_SERVICE_SIGNAL_SHUTDOWN,
+                                G_CALLBACK(g_main_loop_quit),
+                                sync_service.mainloop);
+
       g_dbus_interface_skeleton_export (
           G_DBUS_INTERFACE_SKELETON(service->skeleton),
           connection,
@@ -614,14 +631,6 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
     }
 }
 
-static void 
-service_shutdown (IndicatorService * service G_GNUC_UNUSED, gpointer user_data)
-{
-  SyncService * sync_service = user_data;
-  g_debug ("sync-service shutting down by request");
-  g_main_loop_quit (sync_service->mainloop);
-}
-
 int
 main (int argc, char ** argv)
 {
@@ -632,14 +641,6 @@ main (int argc, char ** argv)
   textdomain (GETTEXT_PACKAGE);
 
   g_type_init ();
-
-  sync_service.indicator_service =
-    indicator_service_new_version (SYNC_SERVICE_DBUS_NAME, 1);
-
-  g_signal_connect (sync_service.indicator_service,
-                    INDICATOR_SERVICE_SIGNAL_SHUTDOWN,
-                    G_CALLBACK(service_shutdown),
-                    &sync_service);
 
   sync_service.skeleton = dbus_sync_service_skeleton_new ();
 
