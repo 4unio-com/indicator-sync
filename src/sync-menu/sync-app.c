@@ -124,8 +124,15 @@ sync_menu_app_dispose (GObject *object)
 
   sync_menu_app_set_menu (self, NULL);
 
-  g_dbus_interface_skeleton_unexport (G_DBUS_INTERFACE_SKELETON(p->skeleton));
-  g_clear_object (&p->skeleton);
+  if (p->skeleton != NULL)
+    {
+      GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
+
+      if (g_dbus_interface_skeleton_get_connection(s) != NULL)
+        g_dbus_interface_skeleton_unexport (s);
+
+      g_clear_object (&p->skeleton);
+    }
 
   if (p->cancellable != NULL)
     {
