@@ -209,11 +209,16 @@ on_sync_service_name_vanished (GDBusConnection  * connection,
 static void
 on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 {
-  g_debug (G_STRLOC" %s", G_STRFUNC);
-  GError * err = NULL;
-  SyncMenuApp * client = SYNC_MENU_APP(user_data);
-  SyncMenuAppPriv * p = client->priv;
+  GError * err;
+  SyncMenuApp * client;
+  SyncMenuAppPriv * p;
 
+  g_return_if_fail (IS_SYNC_MENU_APP (user_data));
+
+  client = SYNC_MENU_APP (user_data);
+  p = client->priv;
+
+  err = NULL;
   p->session_bus = g_bus_get_finish (res, &err);
   if (err != NULL)
     { 

@@ -157,6 +157,29 @@ class ClientTest : public ::testing::Test
 ****
 ***/
 
+TEST_F (ClientTest, TestSimpleProperties)
+{
+  SyncMenuApp * app;
+  DbusmenuServer * menu_server;
+  const gboolean paused = TRUE;
+  const gchar * const desktop_id = "transmission-gtk.desktop";
+  const SyncMenuState state = SYNC_MENU_STATE_ERROR;
+
+  menu_server = dbusmenu_server_new ("/dbusmenu/ubuntuone");
+  app = sync_menu_app_new (desktop_id);
+  sync_menu_app_set_menu (app, menu_server);
+  sync_menu_app_set_state (app, state);
+  sync_menu_app_set_paused (app, paused);
+
+  ASSERT_EQ (sync_menu_app_get_menu (app), menu_server);
+  ASSERT_EQ (sync_menu_app_get_state (app), state);
+  ASSERT_EQ (sync_menu_app_get_paused (app), paused);
+  ASSERT_STREQ (sync_menu_app_get_desktop_id (app), desktop_id);
+
+  g_clear_object (&app);
+  g_clear_object (&menu_server);
+}
+
 TEST_F (ClientTest, TestCanStartService)
 {
   ASSERT_TRUE (service_proxy == NULL);
