@@ -70,9 +70,9 @@ AC_DEFUN([AC_TDD_GCOV],
   changequote([,])
 
   # Add the special gcc flags
-  COVERAGE_CFLAGS="-O0 -fprofile-arcs -ftest-coverage"
-  COVERAGE_CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage"	
-  COVERAGE_LDFLAGS="-lgcov"
+  COVERAGE_CFLAGS="--coverage -O0"
+  COVERAGE_CXXFLAGS="--coverage -O0"
+  COVERAGE_LDFLAGS="--coverage"
 
   # Check availability of gcovr
   AC_CHECK_PROG(GCOVR, gcovr, gcovr)
