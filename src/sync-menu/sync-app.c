@@ -38,12 +38,11 @@ struct _SyncMenuAppPriv
 {
   guint             watch_id;
   GDBusConnection * session_bus;
-  guint             signal_subscription;
-  DbusSyncMenuApp  * skeleton;
+  DbusSyncMenuApp * skeleton;
   DbusmenuServer  * menu_server;
   GBinding        * menu_binding;
   gchar           * desktop_id;
-  SyncMenuState         state;
+  SyncMenuState     state;
   gboolean          paused;
   GCancellable    * cancellable;
 };
@@ -124,13 +123,6 @@ sync_menu_app_dispose (GObject *object)
   SyncMenuAppPriv * p = self->priv;
 
   sync_menu_app_set_menu (self, NULL);
-
-  if (p->signal_subscription)
-    {
-      g_dbus_connection_signal_unsubscribe (p->session_bus,
-                                            p->signal_subscription);
-      p->signal_subscription = 0;
-    }
 
   g_dbus_interface_skeleton_unexport (G_DBUS_INTERFACE_SKELETON(p->skeleton));
   g_clear_object (&p->skeleton);
