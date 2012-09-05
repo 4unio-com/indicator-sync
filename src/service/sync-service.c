@@ -382,6 +382,7 @@ entry_free (ClientEntry * entry)
   signal_handler_clear (entry->sync_menu_app, &entry->sync_menu_app_menu_handler_id);
   signal_handler_clear (entry->sync_menu_app, &entry->sync_menu_app_state_handler_id);
   signal_handler_clear (entry->sync_menu_app, &entry->sync_menu_app_paused_handler_id);
+  g_clear_object (&entry->app_menu_item);
   g_clear_object (&entry->sync_menu_app);
 
   entry_clear_menu_client (entry);
