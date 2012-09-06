@@ -157,6 +157,74 @@ class ClientTest : public ::testing::Test
 ****
 ***/
 
+TEST_F (ClientTest, TestAccessors)
+{
+  SyncMenuApp * app;
+  DbusmenuServer * menu_server;
+  const gboolean paused = TRUE;
+  const gchar * const desktop_id = "transmission-gtk.desktop";
+  const SyncMenuState state = SYNC_MENU_STATE_ERROR;
+ 
+  // create a new SyncMenuApp 
+  app = sync_menu_app_new (desktop_id);
+
+  // test its setters & getters
+  menu_server = dbusmenu_server_new ("/dbusmenu/ubuntuone");
+  sync_menu_app_set_menu (app, menu_server);
+  sync_menu_app_set_state (app, state);
+  sync_menu_app_set_paused (app, paused);
+  ASSERT_EQ (state, sync_menu_app_get_state (app));
+  ASSERT_EQ (paused, sync_menu_app_get_paused (app));
+  ASSERT_EQ (menu_server, sync_menu_app_get_menu (app));
+  ASSERT_STREQ (desktop_id, sync_menu_app_get_desktop_id (app));
+
+  // cleanup
+  g_clear_object (&app);
+  g_clear_object (&menu_server);
+}
+
+TEST_F (ClientTest, TestGObjectAccessors)
+{
+  gchar * d;
+  gboolean p;
+  SyncMenuState s;
+  DbusmenuServer * ms;
+  SyncMenuApp * app;
+  DbusmenuServer * menu_server;
+  const gboolean paused = TRUE;
+  const gchar * const desktop_id = "transmission-gtk.desktop";
+  const SyncMenuState state = SYNC_MENU_STATE_ERROR;
+ 
+  // create a new SyncMenuApp 
+  menu_server = dbusmenu_server_new ("/dbusmenu/ubuntuone");
+  app = SYNC_MENU_APP (g_object_new (SYNC_MENU_APP_TYPE,
+                                     SYNC_MENU_APP_PROP_DESKTOP_ID, desktop_id,
+                                     SYNC_MENU_APP_PROP_STATE, state,
+                                     SYNC_MENU_APP_PROP_PAUSED, paused,
+                                     SYNC_MENU_APP_PROP_DBUSMENU, menu_server,
+                                     NULL));
+
+  // test its properties via g_object_get
+  g_object_get (G_OBJECT(app), SYNC_MENU_APP_PROP_STATE, &s,
+                               SYNC_MENU_APP_PROP_PAUSED, &p,
+                               SYNC_MENU_APP_PROP_DESKTOP_ID, &d,
+                               SYNC_MENU_APP_PROP_DBUSMENU, &ms,
+                               NULL);
+  ASSERT_EQ (state, s);
+  ASSERT_EQ (paused, p);
+  ASSERT_EQ (menu_server, ms);
+  ASSERT_STREQ (desktop_id, d);
+  g_clear_object (&ms);
+  g_free (d);
+
+  g_clear_object (&app);
+  g_clear_object (&menu_server);
+}
+
+/***
+****
+***/
+
 TEST_F (ClientTest, TestCanStartService)
 {
   ASSERT_TRUE (service_proxy == NULL);
@@ -179,6 +247,44 @@ TEST_F (ClientTest, AppCanStartService)
 
   TearDownServiceProxy ();
   g_clear_object (&app);
+}
+
+/***
+****  Confirm that changing our menu triggers the service to layout-update
+***/
+
+TEST_F (ClientTest, TestMenu)
+{
+  SyncMenuApp * app;
+  DbusmenuMenuitem * root;
+  DbusmenuServer * menu_server;
+  DbusmenuClient * menu_client;
+  SetUpServiceProxy (false);
+
+  app = sync_menu_app_new ("transmission-gtk.desktop");
+  WaitForSignal (service_proxy, "notify::g-name-owner");
+  ASSERT_TRUE (ServiceProxyIsOwned ());
+
+  WaitForSignal (service_proxy, "notify::client-count");
+  ASSERT_EQ (1, dbus_sync_service_get_client_count (service_proxy));
+
+  // add a client to listen to menu changes from the service
+  menu_client = dbusmenu_client_new (SYNC_SERVICE_DBUS_NAME,
+                                     SYNC_SERVICE_DBUS_MENU_OBJECT);
+
+  // add a menu to the SyncMenuApp
+  root = dbusmenu_menuitem_new ();
+  menu_server = dbusmenu_server_new ("/dbusmenu/ubuntuone");
+  dbusmenu_server_set_root (menu_server, root);
+  WaitForSignal (menu_client, "layout-updated");
+  sync_menu_app_set_menu (app, menu_server);
+  WaitForSignal (menu_client, "layout-updated");
+
+  // cleanup
+  g_clear_object (&menu_client);
+  g_clear_object (&menu_server);
+  g_clear_object (&app);
+  TearDownServiceProxy ();
 }
 
 /***

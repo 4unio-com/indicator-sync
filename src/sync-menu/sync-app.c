@@ -38,12 +38,11 @@ struct _SyncMenuAppPriv
 {
   guint             watch_id;
   GDBusConnection * session_bus;
-  guint             signal_subscription;
-  DbusSyncMenuApp  * skeleton;
+  DbusSyncMenuApp * skeleton;
   DbusmenuServer  * menu_server;
   GBinding        * menu_binding;
   gchar           * desktop_id;
-  SyncMenuState         state;
+  SyncMenuState     state;
   gboolean          paused;
   GCancellable    * cancellable;
 };
@@ -125,15 +124,15 @@ sync_menu_app_dispose (GObject *object)
 
   sync_menu_app_set_menu (self, NULL);
 
-  if (p->signal_subscription)
+  if (p->skeleton != NULL)
     {
-      g_dbus_connection_signal_unsubscribe (p->session_bus,
-                                            p->signal_subscription);
-      p->signal_subscription = 0;
-    }
+      GDBusInterfaceSkeleton * s = G_DBUS_INTERFACE_SKELETON(p->skeleton);
 
-  g_dbus_interface_skeleton_unexport (G_DBUS_INTERFACE_SKELETON(p->skeleton));
-  g_clear_object (&p->skeleton);
+      if (g_dbus_interface_skeleton_get_connection(s) != NULL)
+        g_dbus_interface_skeleton_unexport (s);
+
+      g_clear_object (&p->skeleton);
+    }
 
   if (p->cancellable != NULL)
     {
@@ -217,11 +216,16 @@ on_sync_service_name_vanished (GDBusConnection  * connection,
 static void
 on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 {
-  g_debug (G_STRLOC" %s", G_STRFUNC);
-  GError * err = NULL;
-  SyncMenuApp * client = SYNC_MENU_APP(user_data);
-  SyncMenuAppPriv * p = client->priv;
+  GError * err;
+  SyncMenuApp * client;
+  SyncMenuAppPriv * p;
 
+  g_return_if_fail (IS_SYNC_MENU_APP (user_data));
+
+  client = SYNC_MENU_APP (user_data);
+  p = client->priv;
+
+  err = NULL;
   p->session_bus = g_bus_get_finish (res, &err);
   if (err != NULL)
     { 
