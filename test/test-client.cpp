@@ -250,6 +250,44 @@ TEST_F (ClientTest, AppCanStartService)
 }
 
 /***
+****  Confirm that changing our menu triggers the service to layout-update
+***/
+
+TEST_F (ClientTest, TestMenu)
+{
+  SyncMenuApp * app;
+  DbusmenuMenuitem * root;
+  DbusmenuServer * menu_server;
+  DbusmenuClient * menu_client;
+  SetUpServiceProxy (false);
+
+  app = sync_menu_app_new ("transmission-gtk.desktop");
+  WaitForSignal (service_proxy, "notify::g-name-owner");
+  ASSERT_TRUE (ServiceProxyIsOwned ());
+
+  WaitForSignal (service_proxy, "notify::client-count");
+  ASSERT_EQ (1, dbus_sync_service_get_client_count (service_proxy));
+
+  // add a client to listen to menu changes from the service
+  menu_client = dbusmenu_client_new (SYNC_SERVICE_DBUS_NAME,
+                                     SYNC_SERVICE_DBUS_MENU_OBJECT);
+
+  // add a menu to the SyncMenuApp
+  root = dbusmenu_menuitem_new ();
+  menu_server = dbusmenu_server_new ("/dbusmenu/ubuntuone");
+  dbusmenu_server_set_root (menu_server, root);
+  WaitForSignal (menu_client, "layout-updated");
+  sync_menu_app_set_menu (app, menu_server);
+  WaitForSignal (menu_client, "layout-updated");
+
+  // cleanup
+  g_clear_object (&menu_client);
+  g_clear_object (&menu_server);
+  g_clear_object (&app);
+  TearDownServiceProxy ();
+}
+
+/***
 ****  Add a handful of SyncMenuApps & confirm that the service counts them
 ***/
 
