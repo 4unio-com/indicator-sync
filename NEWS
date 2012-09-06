@@ -1,3 +1,8 @@
+12.10.2
+ - fix broken unit tests (lp: #1043956)
+ - expand unit testing coverage (lp: #1040137)
+ - fix memory leak when client apps were removed from the sync menu
+
 12.10.1
  - fix GObject introspection (lp: #1041550)
  - fix client registration bug (lp: #1041352)
