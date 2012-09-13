@@ -1,5 +1,5 @@
 
-libexec_PROGRAMS = indicator-sync-service
+pkglibexec_PROGRAMS = indicator-sync-service
 
 indicator_sync_service_SOURCES = \
   $(top_builddir)/src/sync-service-dbus.c \
