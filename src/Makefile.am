@@ -17,7 +17,7 @@ sync_service_dbus_sources = \
   sync-service-dbus.h
 
 $(sync_service_dbus_sources): sync-service.xml
-	gdbus-codegen \
+	$(AM_V_GEN) gdbus-codegen \
 	  --c-namespace Dbus \
 	  --interface-prefix com.canonical.indicator \
 	  --generate-c-code sync-service-dbus \
@@ -35,7 +35,7 @@ sync_app_dbus_sources = \
   sync-app-dbus.h
 
 $(sync_app_dbus_sources): sync-app.xml
-	gdbus-codegen \
+	$(AM_V_GEN) gdbus-codegen \
 	  --c-namespace DbusSyncMenu \
 	  --interface-prefix com.canonical.indicator.sync \
 	  --generate-c-code sync-app-dbus \
