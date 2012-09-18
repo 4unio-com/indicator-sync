@@ -166,6 +166,8 @@ sync_menu_app_finalize (GObject *object)
 static gchar*
 build_path_from_desktop_id (const gchar * desktop_id)
 {
+  g_return_val_if_fail (desktop_id && *desktop_id, NULL);
+
   /* get the basename in case they passed a full filename
      instead of just the desktop id */
   gchar * base = g_path_get_basename (desktop_id);
@@ -376,7 +378,10 @@ set_property (GObject       * o,
       case PROP_DESKTOP_ID:
         g_return_if_fail (p->desktop_id == NULL); /* ctor only */
         p->desktop_id = g_value_dup_string (value);
-        g_debug (G_STRLOC" initializing desktop_id to '%s'", p->desktop_id);
+        if (p->desktop_id == NULL)
+          g_warning ("No Desktop ID found! Did you give the constructor one?");
+        else
+          g_debug (G_STRLOC" initializing desktop_id to '%s'", p->desktop_id);
         dbus_sync_menu_app_set_desktop (p->skeleton, p->desktop_id);
         break;
 

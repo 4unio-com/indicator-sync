@@ -142,20 +142,57 @@ class ClientTest : public ::testing::Test
       g_clear_object (&service_proxy);
     }
 
-    void WaitForSignal (gpointer instance, const gchar * detailed_signal)
+    static gboolean
+    on_wait_timeout (gpointer main_loop)
     {
+      g_main_loop_quit (static_cast<GMainLoop*>(main_loop));
+      return G_SOURCE_REMOVE;
+    }
+
+    void
+    WaitForSignal (gpointer instance, const gchar * detailed_signal)
+    {
+      guint timeout_id;
+      gulong handler_id;
+      const int timeout_seconds = 5;
+
       ASSERT_TRUE (instance != NULL);
       ASSERT_TRUE (main_loop != NULL);
 
-      const gulong handler_id = g_signal_connect_swapped (instance, detailed_signal, G_CALLBACK(g_main_loop_quit), main_loop);
+
+      handler_id = g_signal_connect_swapped (instance,
+                                             detailed_signal,
+                                             G_CALLBACK(g_main_loop_quit),
+                                             main_loop);
+
+      timeout_id = g_timeout_add_seconds (timeout_seconds,
+                                          on_wait_timeout,
+                                          main_loop);
+
+      // wait for the signal or for timeout, whichever comes first
       g_main_loop_run (main_loop);
+      ASSERT_TRUE (g_main_context_find_source_by_id(NULL,timeout_id) != NULL);
       g_signal_handler_disconnect (instance, handler_id);
+      g_source_remove (timeout_id);
     }
 };
 
 /***
 ****
 ***/
+
+TEST_F (ClientTest, TestNullDesktop)
+{
+  SyncMenuApp * app = sync_menu_app_new (NULL);
+
+  // idle a second so that g_bus_get() can finish so that we
+  // can confirm the NULL desktop-id doesn't crash our object_path generator
+  g_timeout_add_seconds (1, on_wait_timeout, main_loop);
+  g_main_loop_run (main_loop);
+  ASSERT_TRUE (sync_menu_app_get_desktop_id (app) == NULL);
+  g_clear_object (&app);
+}
+
 
 TEST_F (ClientTest, TestAccessors)
 {
