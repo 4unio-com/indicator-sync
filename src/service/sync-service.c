@@ -329,9 +329,11 @@ service_calculate_paused (SyncService * service)
 static void
 service_refresh_paused (SyncService * service)
 {
+  const gboolean old_paused = dbus_sync_service_get_paused (service->skeleton);
   const gboolean new_paused = service_calculate_paused (service);
 
-  dbus_sync_service_set_paused (service->skeleton, new_paused);
+  if (old_paused != new_paused)
+    dbus_sync_service_set_paused (service->skeleton, new_paused);
 }
 
 static void

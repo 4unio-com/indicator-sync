@@ -265,14 +265,10 @@ on_menuitem_activated (AppMenuItem * self, guint timestamp, gpointer data)
   DbusmenuMenuitem * mi = DBUSMENU_MENUITEM(self);
   DbusSyncMenuApp * sync_menu_app = DBUS_SYNC_MENU_APP(self->priv->sync_menu_app);
 
-  /* update the menuitem's state */
+  /* tell the client that the user has manually paused it*/
   const gint old_checked = dbusmenu_menuitem_property_get_int (mi, PROP_TOGGLE);
   const gint new_checked = old_checked == TOGGLE_UNCHECKED ? TOGGLE_CHECKED
                                                            : TOGGLE_UNCHECKED;
-  g_debug (G_STRLOC" changing check from %d to %d", old_checked, new_checked);
-  dbusmenu_menuitem_property_set_int (mi, PROP_TOGGLE, new_checked);
-
-  /* tell the client that the user has manually paused it*/
   const gboolean old_paused = dbus_sync_menu_app_get_paused (sync_menu_app);
   const gboolean new_paused = new_checked == TOGGLE_UNCHECKED;
   if (old_paused != new_paused)

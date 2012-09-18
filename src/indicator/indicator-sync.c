@@ -444,18 +444,38 @@ on_app_widget_shown (GtkWidget * unused, DbusmenuClient * client)
 
 struct AppWidgets
 {
+  gboolean stop_activation;
   GtkWidget * label;
   GtkWidget * icon;
   GtkWidget * gmi;
 };
 
 static void
+on_app_widget_activated (GtkWidget * gmi, struct AppWidgets * widgets)
+{
+  /* If this is being called because we just synchronized our widget's
+     state from the DbusmenuMenuitem's TOGGLE state in app_update_check(),
+     stop the "activate" event here to keep it from getting back to
+     DbusmenuMenuitem and creating a feedback loop */
+  if (widgets->stop_activation)
+    {
+      widgets->stop_activation = FALSE;
+      g_signal_stop_emission_by_name (gmi, "activate");
+    }
+}
+
+static void
 app_update_check (DbusmenuMenuitem * mi, struct AppWidgets * widgets)
 {
-  const gint checked = dbusmenu_menuitem_property_get_int (mi, PROP_TOGGLE_STATE);
+  GtkCheckMenuItem * cmi = GTK_CHECK_MENU_ITEM (widgets->gmi);
+  const gint old_active = gtk_check_menu_item_get_active (cmi);
+  const gint new_active = dbusmenu_menuitem_property_get_int (mi, PROP_TOGGLE_STATE) == TOGGLE_STATE_CHECKED;
 
-  gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM(widgets->gmi),
-                                  checked == TOGGLE_STATE_CHECKED);
+  if (old_active != new_active)
+    {
+      widgets->stop_activation = TRUE;
+      gtk_check_menu_item_set_active (cmi, new_active);
+    }
 }
 
 static void
@@ -528,6 +548,8 @@ new_item_app (DbusmenuMenuitem  * newitem,
 
   /* layout & styling */
   g_signal_connect (w->gmi, "map", G_CALLBACK(on_app_widget_shown), client);
+  g_signal_connect (w->gmi, "activate", G_CALLBACK(on_app_widget_activated), w);
+
   gint padding = 4;
   gtk_widget_style_get(GTK_WIDGET(w->gmi), "toggle-spacing", &padding, NULL);
   GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, padding);
