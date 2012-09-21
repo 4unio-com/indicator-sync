@@ -175,6 +175,14 @@ class ClientTest : public ::testing::Test
       g_signal_handler_disconnect (instance, handler_id);
       g_source_remove (timeout_id);
     }
+
+    static void log_counter_func (const gchar *log_domain,
+                                  GLogLevelFlags log_level,
+                                  const gchar *message,
+                                  gpointer counter)
+    {
+      ++*static_cast<guint*>(counter);
+    }
 };
 
 /***
@@ -183,13 +191,35 @@ class ClientTest : public ::testing::Test
 
 TEST_F (ClientTest, TestNullDesktop)
 {
-  SyncMenuApp * app = sync_menu_app_new (NULL);
+  guint count;
+  guint handler;
+  GLogLevelFlags level;
+  SyncMenuApp * app;
+  const gchar * log_domain = "libsync-menu";
 
-  // idle a second so that g_bus_get() can finish so that we
-  // can confirm the NULL desktop-id doesn't crash our object_path generator
-  g_timeout_add_seconds (1, on_wait_timeout, main_loop);
-  g_main_loop_run (main_loop);
+  // passing a .desktop ID of NULL should generate a warning message...
+  count = 0;
+  level = G_LOG_LEVEL_WARNING;
+  handler = g_log_set_handler (log_domain, level, log_counter_func, &count);
+  app = sync_menu_app_new (NULL);
+  ASSERT_EQ (1, count);
   ASSERT_TRUE (sync_menu_app_get_desktop_id (app) == NULL);
+  g_log_remove_handler (log_domain, handler);
+
+  // ... and it should also generate a critical after we get the bus
+  // and try to use the desktop-id to generate an object path
+  count = 0;
+  level = G_LOG_LEVEL_CRITICAL;
+  handler = g_log_set_handler (log_domain, level, log_counter_func, &count);
+  while (!count)
+    {
+      g_timeout_add (100, on_wait_timeout, main_loop);
+      g_main_loop_run (main_loop);
+    }
+  ASSERT_EQ (1, count);
+  g_log_remove_handler (log_domain, handler);
+
+  // cleanup
   g_clear_object (&app);
 }
 
