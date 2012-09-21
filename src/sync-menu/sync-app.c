@@ -23,7 +23,7 @@
  #include "config.h"
 #endif
 
-#include <string.h> /* strstr() */
+#include <string.h> /* strlen() */
 
 #include <glib.h>
 
@@ -171,26 +171,29 @@ build_path_from_desktop_id (const gchar * desktop_id)
   /* get the basename in case they passed a full filename
      instead of just the desktop id */
   gchar * base = g_path_get_basename (desktop_id);
-
-  /* trim the .desktop off the end */
-  gchar * p = strstr (base, ".desktop");
-  if (p != NULL)
-    {
-      *p = '\0';
-    }
+  
+  if (g_str_has_suffix (base, ".desktop"))
+    base[strlen(base)-8] = '\0';
 
   /* dbus names only allow alnum + underscores */
+  gchar * p;
   for (p=base; p && *p; ++p)
-    {
-      if (!g_ascii_isalnum(*p))
-        {
-          *p = '_';
-        }
-    }
+    if (!g_ascii_isalnum(*p))
+      *p = '_';
 
   p = g_strdup_printf( "/com/canonical/indicator/sync/source/%s", base);
   g_free (base);
-  g_debug (G_STRLOC" built path {%s} from desktop id {%s}", p, desktop_id);
+
+  if (g_variant_is_object_path (p))
+    {
+      g_debug (G_STRLOC" built path {%s} from desktop id {%s}", p, desktop_id);
+    }
+  else
+    {
+      g_warning (G_STRLOC" Not a valid object path: \"%s\"", p);
+      g_clear_pointer (&p, g_free);
+    }
+
   return p;
 }
 
@@ -232,6 +235,7 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
   if (err != NULL)
     { 
       g_error ("unable to get bus: %s", err->message);
+      g_clear_error (&err);
     }
   else
     {
@@ -239,23 +243,27 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 
       GDBusInterfaceSkeleton * skeleton = G_DBUS_INTERFACE_SKELETON(p->skeleton);
       path = build_path_from_desktop_id (p->desktop_id);
-      g_dbus_interface_skeleton_export (skeleton, p->session_bus, path, &err);
-      if (err != NULL)
-        { 
-          g_error ("unable to export skeleton: %s", err->message);
+
+      if (path != NULL)
+        {
+          g_dbus_interface_skeleton_export (skeleton, p->session_bus, path, &err);
+
+          if (err != NULL)
+            { 
+              g_error ("unable to export skeleton: %s", err->message);
+              g_clear_error (&err);
+            }
+ 
+          p->watch_id = g_bus_watch_name_on_connection (p->session_bus,
+                                                        SYNC_SERVICE_DBUS_NAME,
+                                                        G_BUS_NAME_WATCHER_FLAGS_AUTO_START,
+                                                        on_sync_service_name_appeared,
+                                                        on_sync_service_name_vanished,
+                                                        client, NULL);
+
+          g_free (path);
         }
-
-      p->watch_id = g_bus_watch_name_on_connection (p->session_bus,
-                                                    SYNC_SERVICE_DBUS_NAME,
-                                                    G_BUS_NAME_WATCHER_FLAGS_AUTO_START,
-                                                    on_sync_service_name_appeared,
-                                                    on_sync_service_name_vanished,
-                                                    client, NULL);
-
-      g_free (path);
     }
-
-  g_clear_error (&err);
 }
 
 static void
