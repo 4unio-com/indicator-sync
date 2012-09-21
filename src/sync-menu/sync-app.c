@@ -44,7 +44,7 @@ struct _SyncMenuAppPriv
   gchar           * desktop_id;
   SyncMenuState     state;
   gboolean          paused;
-  GCancellable    * cancellable;
+  GCancellable    * bus_get_cancellable;
 };
 
 enum
@@ -134,10 +134,11 @@ sync_menu_app_dispose (GObject *object)
       g_clear_object (&p->skeleton);
     }
 
-  if (p->cancellable != NULL)
+  if (p->bus_get_cancellable != NULL)
     {
-      g_cancellable_cancel (p->cancellable);
-      g_clear_object (&p->cancellable);
+      g_cancellable_cancel (p->bus_get_cancellable);
+      g_object_steal_data (G_OBJECT(p->bus_get_cancellable), "sync-menu-app");
+      p->bus_get_cancellable = NULL;
     }
 
   if (p->watch_id != 0 )
@@ -219,16 +220,27 @@ on_sync_service_name_vanished (GDBusConnection  * connection,
 }
 
 static void
-on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
+on_got_bus (GObject * o, GAsyncResult * res, gpointer gcancellable)
 {
   GError * err;
-  SyncMenuApp * client;
+  SyncMenuApp * app;
   SyncMenuAppPriv * p;
+  GCancellable * cancellable;
 
-  g_return_if_fail (IS_SYNC_MENU_APP (user_data));
+  /* if we were cancelled, don't do anything. */
+  cancellable = G_CANCELLABLE (gcancellable);
+  g_return_if_fail (cancellable != NULL);
+  if (g_cancellable_is_cancelled (cancellable))
+    {
+      g_object_unref (cancellable);
+      return;
+    }
 
-  client = SYNC_MENU_APP (user_data);
-  p = client->priv;
+  app = g_object_get_data (G_OBJECT(cancellable), "sync-menu-app");
+  g_return_if_fail (IS_SYNC_MENU_APP (app));
+  p = app->priv;
+  p->bus_get_cancellable = NULL;
+  g_clear_object (&cancellable);
 
   err = NULL;
   p->session_bus = g_bus_get_finish (res, &err);
@@ -259,7 +271,7 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
                                                         G_BUS_NAME_WATCHER_FLAGS_AUTO_START,
                                                         on_sync_service_name_appeared,
                                                         on_sync_service_name_vanished,
-                                                        client, NULL);
+                                                        app, NULL);
 
           g_free (path);
         }
@@ -277,7 +289,7 @@ sync_menu_app_init (SyncMenuApp * client)
   p->desktop_id = NULL;
   p->skeleton = dbus_sync_menu_app_skeleton_new ();
   p->state = SYNC_MENU_STATE_IDLE;
-  p->cancellable = g_cancellable_new();
+  p->bus_get_cancellable = NULL;
 
   client->priv = p;
 }
@@ -285,6 +297,7 @@ sync_menu_app_init (SyncMenuApp * client)
 static void
 sync_menu_app_constructed (GObject * object)
 {
+  GCancellable * cancellable;
   SyncMenuApp * app = SYNC_MENU_APP(object);
   SyncMenuAppPriv * p = app->priv;
 
@@ -296,7 +309,10 @@ sync_menu_app_constructed (GObject * object)
                           p->skeleton, SYNC_MENU_APP_PROP_STATE,
                           G_BINDING_SYNC_CREATE);
 
-  g_bus_get (G_BUS_TYPE_SESSION, p->cancellable, on_got_bus, app);
+  cancellable = g_cancellable_new();
+  g_object_set_data (G_OBJECT(cancellable), "sync-menu-app", app);
+  g_bus_get (G_BUS_TYPE_SESSION, cancellable, on_got_bus, cancellable);
+  p->bus_get_cancellable = cancellable;
 
   G_OBJECT_CLASS (sync_menu_app_parent_class)->constructed (object);
 }
