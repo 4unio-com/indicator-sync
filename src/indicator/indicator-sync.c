@@ -264,19 +264,19 @@ calculate_icon_name (IndicatorSync * self)
 
   if (state == SYNC_MENU_STATE_ERROR)
     {
-      icon_name = "sync-error";
+      icon_name = "ubuntuone-client-error";
     }
   else if (state == SYNC_MENU_STATE_SYNCING)
     {
-      icon_name = "sync-syncing";
+      icon_name = "ubuntuone-client-updating";
     }
   else if (paused)
     {
-      icon_name = "sync-paused";
+      icon_name = "ubuntuone-client-paused";
     }
   else
     {
-      icon_name = "sync-idle";
+      icon_name = "ubuntuone-client-idle";
     }
 
   return icon_name;
