@@ -481,9 +481,22 @@ app_update_check (DbusmenuMenuitem * mi, struct AppWidgets * widgets)
 static void
 app_update_icon (DbusmenuMenuitem * mi, struct AppWidgets * w)
 {
-  const gchar * icon_name = dbusmenu_menuitem_property_get (mi, APPLICATION_MENUITEM_PROP_ICON);
+  GIcon * icon;
+  const gchar * str;
+  GError * error = NULL;
 
-  gtk_image_set_from_icon_name (GTK_IMAGE(w->icon), icon_name, GTK_ICON_SIZE_MENU);
+  str = dbusmenu_menuitem_property_get (mi, APPLICATION_MENUITEM_PROP_ICON);
+  icon = g_icon_new_for_string (str, &error);
+  if (error != NULL)
+    {
+      g_warning ("unable to load icon: %s", error->message);
+      g_error_free (error);
+    }
+  else
+    {
+      gtk_image_set_from_gicon (GTK_IMAGE(w->icon), icon, GTK_ICON_SIZE_MENU);
+      g_object_unref (icon);
+    }
 }
 
 static void
