@@ -1,4 +1,4 @@
-AC_INIT([indicator-sync],[12.10.3])
+AC_INIT([indicator-sync],[12.10.4])
 AC_CONFIG_SRCDIR([src/dbus-shared.h])
 AM_INIT_AUTOMAKE
 

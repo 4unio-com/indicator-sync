@@ -1,17 +1,24 @@
+12.10.4
+ - fix sub-menuitems were not edge-to-edge (LP: #1059483)
+ - add fallback icons to hicolor theme (LP: #1059591)
+ - add ubuntuone-client-* icons to our themed icon search (LP: #1043379)
+ - look for -symbolic versions of app icons (LP: #1054310)
+ - silence console g_warnings() (LP: #1052995)
+
 12.10.3
- - warng if a NULL desktop-id is passed to SyncMenuApp (lp: #1049480)
- - install service to pkglibexecdir rather than libexecdir (lp: #1050026)
+ - warn if a NULL desktop-id is passed to SyncMenuApp (LP: #1049480)
+ - install service to pkglibexecdir rather than libexecdir (LP: #1050026)
  - fix feedback loop triggered by clicking 'paused' while >1 indicator
-   was running (lp: #1051798)
+   was running (LP: #1051798)
 
 12.10.2
- - fix broken unit tests (lp: #1043956)
- - expand unit testing coverage (lp: #1040137)
+ - fix broken unit tests (LP: #1043956)
+ - expand unit testing coverage (LP: #1040137)
  - fix memory leak when client apps were removed from the sync menu
 
 12.10.1
- - fix GObject introspection (lp: #1041550)
- - fix client registration bug (lp: #1041352)
+ - fix GObject introspection (LP: #1041550)
+ - fix client registration bug (LP: #1041352)
  - add versioning info to the pkgconfig file
  - add unit tests
 
