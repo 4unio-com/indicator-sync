@@ -1,4 +1,4 @@
-iconsdir = $(datadir)/icons/hicolor/22x22/status
+iconsdir = $(datadir)/icons/hicolor/24x24/status
 
 icons_DATA =  \
   sync-client-error.svg \

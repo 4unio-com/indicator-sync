@@ -125,13 +125,10 @@ AC_ARG_ENABLE([localinstall],
 
 if test "x$with_localinstall" = "xyes"; then
 	INDICATORDIR="${libdir}/indicators/2/"
-	INDICATORICONSDIR="${datadir}/icons/"
 else
 	INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator3-0.4`
-	INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator3-0.4`
 fi
 AC_SUBST(INDICATORDIR)
-AC_SUBST(INDICATORICONSDIR)
 
 ###########################
 # DBus Service Info
@@ -185,6 +182,8 @@ AC_CONFIG_FILES([Makefile
                  data/icons/Makefile
                  data/icons/22x22/Makefile
                  data/icons/22x22/status/Makefile
+                 data/icons/24x24/Makefile
+                 data/icons/24x24/status/Makefile
                  examples/Makefile
                  test/Makefile
                  test/indicator-sync.service

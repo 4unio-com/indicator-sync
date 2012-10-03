@@ -87,7 +87,7 @@ static gboolean new_item_prog (DbusmenuMenuitem * newitem,
                                DbusmenuClient   * client,
                                gpointer           user_data);
 
-static const gchar * calculate_icon_name (IndicatorSync * self);
+static void update_icon (IndicatorSync * self);
 
 static void on_service_manager_connection_changed (IndicatorServiceManager * sm,
                                                    gboolean connected,
@@ -134,10 +134,11 @@ indicator_sync_init (IndicatorSync *self)
 
   /* init the entry */
   self->entry.label = NULL; /* no label */
-  self->entry.image = g_object_ref_sink (gtk_image_new_from_icon_name (calculate_icon_name (self), GTK_ICON_SIZE_BUTTON));
+  self->entry.image = g_object_ref_sink (gtk_image_new());
   self->entry.menu = g_object_ref_sink (menu);
   self->entry.name_hint = PACKAGE;
   self->entry.accessible_desc = NULL;
+  update_icon (self);
   gtk_widget_show (GTK_WIDGET(self->entry.image));
 
   /* init the service manager */
@@ -255,42 +256,53 @@ update_accessible_title (IndicatorSync * self)
 }
 
 /* figure out what icon to use */
-static const gchar *
-calculate_icon_name (IndicatorSync * self)
+static GIcon*
+calculate_icon (IndicatorSync * self)
 {
-  const gchar * icon_name;
+  GIcon * icon;
+  GPtrArray * names = g_ptr_array_new ();
   const SyncMenuState state = get_service_state (self);
   const gboolean paused = get_service_paused (self);
 
   if (state == SYNC_MENU_STATE_ERROR)
     {
-      icon_name = "ubuntuone-client-error";
+      g_ptr_array_add (names, "sync-client-error");
+      g_ptr_array_add (names, "ubuntuone-client-error");
     }
   else if (state == SYNC_MENU_STATE_SYNCING)
     {
-      icon_name = "ubuntuone-client-updating";
+      g_ptr_array_add (names, "sync-client-updating");
+      g_ptr_array_add (names, "ubuntuone-client-updating");
     }
   else if (paused)
     {
-      icon_name = "ubuntuone-client-paused";
+      g_ptr_array_add (names, "sync-client-paused");
+      g_ptr_array_add (names, "ubuntuone-client-paused");
     }
   else
     {
-      icon_name = "ubuntuone-client-idle";
+      g_ptr_array_add (names, "sync-client-idle");
+      g_ptr_array_add (names, "ubuntuone-client-idle");
     }
 
-  return icon_name;
+  icon = g_themed_icon_new_from_names ((gchar**)names->pdata, names->len);
+  g_ptr_array_free (names, TRUE);
+
+  return icon;
 }
 
 /* update our icon based on the service's state */
 static void
 update_icon (IndicatorSync * self)
 {
+  GIcon * icon;
+  const GtkIconSize icon_size = GTK_ICON_SIZE_LARGE_TOOLBAR;
+
   g_return_if_fail (IS_INDICATOR_SYNC(self));
 
-  const gchar * const icon_name = calculate_icon_name (self);
-  g_debug (G_STRLOC" setting icon to '%s'", icon_name);
-  gtk_image_set_from_icon_name (GTK_IMAGE(self->entry.image), icon_name, GTK_ICON_SIZE_MENU);
+  icon = calculate_icon (self);
+  gtk_image_set_from_gicon (GTK_IMAGE(self->entry.image), icon, icon_size);
+  g_clear_object (&icon);
 }
 
 static void
