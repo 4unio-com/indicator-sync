@@ -448,8 +448,12 @@ on_app_widget_shown (GtkWidget * unused, DbusmenuClient * client)
       GObject * o = G_OBJECT(gmi);
       if (g_object_get_qdata (o, tweak_quark) == NULL)
         {
-          g_object_set_qdata (o, tweak_quark, GINT_TO_POINTER(TRUE));
-          gtk_widget_set_margin_left (GTK_WIDGET(o), aligned_left_margin);
+          GtkWidget * child;
+          if ((child = gtk_bin_get_child (GTK_BIN(gmi))))
+            {
+              gtk_widget_set_margin_left (child, aligned_left_margin);
+              g_object_set_qdata (o, tweak_quark, GINT_TO_POINTER(TRUE));
+            }
         }
     }
 }
