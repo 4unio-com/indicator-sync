@@ -331,6 +331,25 @@ get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
     {
       GIcon * icon = g_app_info_get_icon (app_info);
       iconstr = g_icon_to_string (icon);
+
+      /* if GAppInfo returned a themed but non-symbolic icon,
+         let's add the symbolic option here */
+      if (G_IS_THEMED_ICON(icon))
+        {
+          GThemedIcon * themed_icon = G_THEMED_ICON (icon);
+          const gchar * const * names = g_themed_icon_get_names (themed_icon);
+          if (g_strv_length((gchar**)names) == 1)
+            {
+              gchar * tmp = g_strdup_printf ("%s-symbolic", names[0]);
+              g_clear_object (&icon);
+              icon =  g_themed_icon_new_with_default_fallbacks (tmp);
+              g_free (tmp);
+              g_free (iconstr);
+              iconstr = g_icon_to_string (icon);
+            }
+        }
+
+      g_clear_object (&icon);
     }
 
   if (iconstr == NULL)
