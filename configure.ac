@@ -1,6 +1,6 @@
 AC_INIT([indicator-sync],[12.10.4])
 AC_CONFIG_SRCDIR([src/dbus-shared.h])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([check-news])
 
 AC_PREREQ(2.53)
 
