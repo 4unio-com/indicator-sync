@@ -15,14 +15,15 @@ Build-Depends: debhelper (>= 9),
                libdbusmenu-gtk3-dev (>= 0.5.90),
                gir1.2-dbusmenu-glib-0.4,
                libido3-0.1-dev (>= 12.10.0),
-               libgtest-dev
+               libgtest-dev,
 Standards-Version: 3.9.3
 Homepage: http://launchpad.net/indicator-sync
 Vcs-Bzr: https://code.launchpad.net/+branch/ubuntu/indicator-sync
 
 Package: indicator-sync
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
 Multi-Arch: foreign
 Description: indicator for synchronisation processes status
  A place on the user's desktop that collects status information data from
@@ -34,10 +35,11 @@ Description: indicator for synchronisation processes status
 
 Package: libsync-menu1
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Pre-Depends: ${misc:Pre-Depends}
-Replaces: libindicator-sync-client1
-Conflicts: libindicator-sync-client1
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Pre-Depends: ${misc:Pre-Depends},
+Replaces: libindicator-sync-client1,
+Conflicts: libindicator-sync-client1,
 Multi-Arch: same
 Description: indicator for synchronisation processes status - libraries
  A place on the user's desktop that collects status information data from
@@ -48,9 +50,11 @@ Description: indicator for synchronisation processes status - libraries
 
 Package: gir1.2-syncmenu-0.1
 Architecture: any
-Depends: ${gir:Depends}, ${shlibs:Depends}, ${misc:Depends}
-Replaces: gir1.2-syncclient-12.10
-Conflicts: gir1.2-syncclient-12.10
+Depends: ${gir:Depends},
+         ${shlibs:Depends},
+         ${misc:Depends},
+Replaces: gir1.2-syncclient-12.10,
+Conflicts: gir1.2-syncclient-12.10,
 Description: indicator for synchronisation processes status - bindings
  A place on the user's desktop that collects status information data from
  processes that involve some form of synchronisation with servers; such as
@@ -66,9 +70,9 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          libsync-menu1 (= ${binary:Version}),
          libdbusmenu-glib-dev,
-         libglib2.0-dev
-Replaces: libindicator-sync-client1
-Conflicts: libindicator-sync-client1
+         libglib2.0-dev,
+Replaces: libindicator-sync-client1,
+Conflicts: libindicator-sync-client1,
 Description: indicator for synchronisation processes status - development files
  A place on the user's desktop that collects status information data from
  processes that involve some form of synchronisation with servers; such as
