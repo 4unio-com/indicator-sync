@@ -1,0 +1,5 @@
+usr/include/sync-menu-0.1
+usr/share/gir-1.0
+usr/lib/*/pkgconfig
+usr/lib/*/libsync-menu*.so
+

@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+%:
+	dh $@  --with autoreconf,gir
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--enable-tests
+
+override_dh_auto_install:
+	dh_auto_install
+	find debian/tmp/usr/lib -name \*.la -exec rm {} \;
+	find debian/tmp/usr/lib -name \*.a -exec rm {} \;
+
+override_dh_install:
+	dh_install --fail-missing
+
+override_dh_shlibdeps:
+	dh_shlibdeps
+
+override_dh_makeshlibs:
+	dh_makeshlibs -- -c4
+
+override_dh_auto_test:
+	dbus-test-runner -m 300 -t dh_auto_test

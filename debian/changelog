@@ -1,0 +1,97 @@
+indicator-sync (12.10.4-0ubuntu1) quantal; urgency=low
+
+  * New upstream version:
+    - fix sub-menuitems were not edge-to-edge (LP: #1059483)
+    - add fallback icons to hicolor theme (LP: #1059591)
+    - add ubuntuone-client-* icons to our themed icon search (LP: #1043379)
+    - look for -symbolic versions of app icons (LP: #1054310)
+    - silence console g_warnings() (LP: #1052995)
+  * debian/patches/use_new_icons.patch: dropped, the fix is in the update
+  * debian/indicator-sync.install: updated for the new version
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 03 Oct 2012 17:51:25 +0200
+
+indicator-sync (12.10.3-0ubuntu2) quantal; urgency=low
+
+  * debian/patches/use_new_icons.patch:
+    - use correct icons from ubuntu-mono (lp: #1043379)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 28 Sep 2012 17:35:41 +0200
+
+indicator-sync (12.10.3-0ubuntu1) quantal; urgency=low
+
+  * New upstream release.
+    - warn if a NULL desktop-id is passed to SyncMenuApp (LP: #1049480)
+    - install service to pkglibexecdir rather than libexecdir (LP: #1050026)
+    - fix feedback loop triggered by clicking 'paused' while >1 indicator
+      was running (LP: #1051798)
+  * -debian/patches/install-to-pkglibexecdir.patch
+    - merged upstream
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Wed, 19 Sep 2012 15:50:06 -0400
+
+indicator-sync (12.10.2-0ubuntu2) quantal; urgency=low
+
+  * debian/rules: Fix FTBFS on arm: increase dbus-test-runner timeout to 300
+    seconds to account for slow builders. 
+  * debian/rules: replace incorrect dh_girepository call with --with gir.
+    (LP: #1050032)
+  * debian/copyright: fix copy-paste error in GPL-3 text; should not mention
+    "or later".
+  * debian/libsync-menu1.symbols: drop #MISSING: entries.
+  * debian/patches/install-to-pkglibexecdir.patch: make sure the service gets
+    installed to the pkglibexecdir rather than libexecdir. (LP: #1050026)
+  * debian/indicator-sync.install: fix install file for the change above.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Thu, 13 Sep 2012 11:45:59 -0400
+
+indicator-sync (12.10.2-0ubuntu1) quantal; urgency=low
+
+  * New upstream bugfix release.
+    - Fix unit tests.
+    - Increase test coverage.
+  * debian/rules: re-enable tests which got fixed with this release.
+    (LP: #1043956)
+  * debian/patches/upstream-watchers-client-test.patch: dropped, included
+    upstream.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Wed, 12 Sep 2012 15:38:42 -0400
+
+indicator-sync (12.10.1-0ubuntu2) quantal; urgency=low
+
+  * The previous upload should have closed an FFE: (LP: #1043343)
+  * debian/rules: disable tests; they fail on arm* and powerpc; and tend to
+    fail on amd64/i386 as well. They will need more work; in the meantime
+    manual testing with the built source shows the indicator works.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Thu, 30 Aug 2012 13:32:46 -0400
+
+indicator-sync (12.10.1-0ubuntu1) quantal; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    - rename gir1.2-syncclient-12.10 to gir1.2-syncmenu-0.1.
+    - rename libindicator-sync-client1 to libsync-menu1.
+    - rename libindicator-sync-client-dev to libsync-menu-dev.
+    - add gir1.2-dbusmenu-glib-0.4 to Build-Depends.
+    - add dbus-test-runner to Build-Depends.
+  * debian/*.install:
+    - rename files as per package name changes.
+    - update libsync-menu-dev.install to the library name.
+    - update libsync-menu1.install to the library name.
+    - update libsync-menu1.symbols to the library name.
+    - rename /usr/include/indicator-sync-0.1 to /usr/include/sync-menu-0.1.
+  * debian/patches/upstream-soname-versioning.patch,
+    debian/patches/upstream-pkgconfig-fixes.patch: dropped, no longer needed.
+  * debian/libsync-menu1.symbols:
+    - update symbols that were renamed; keep the old ones as missing.
+  * debian/patches/upstream-watchers-client-test.patch: fix up the client test
+    to avoid failing due to watchers not being allowed to connect.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Tue, 28 Aug 2012 16:25:25 -0400
+
+indicator-sync (12.10.0-0ubuntu1) quantal; urgency=low
+
+  * Initial release.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Wed, 22 Aug 2012 18:53:29 -0400
