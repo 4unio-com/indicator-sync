@@ -3,6 +3,7 @@ indicator-sync (12.10.5-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - Reorganize dh_auto_install and dh_install; call dh_install --fail-missing
       directly from dh_auto_install after removing .la/.a files.
+    - Add and export DPKG_GENSYMBOLS_CHECK_LEVEL = 4.
 
  -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Mon, 19 Nov 2012 10:48:07 -0500
 

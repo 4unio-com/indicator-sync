@@ -2,6 +2,8 @@
 
 #export DH_VERBOSE=1
 
+export DH_DPKG_GENSYMBOLS_CHECK_LEVEL=4
+
 %:
 	dh $@  --with autoreconf,gir
 
