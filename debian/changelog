@@ -1,3 +1,11 @@
+indicator-sync (12.10.5-0ubuntu1) UNRELEASED; urgency=low
+
+  * debian/rules:
+    - Reorganize dh_auto_install and dh_install; call dh_install --fail-missing
+      directly from dh_auto_install after removing .la/.a files.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Mon, 19 Nov 2012 10:48:07 -0500
+
 indicator-sync (12.10.4-0ubuntu1) quantal; urgency=low
 
   * New upstream version:
