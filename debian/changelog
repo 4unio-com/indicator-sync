@@ -9,6 +9,7 @@ indicator-sync (12.10.5-0ubuntu1) UNRELEASED; urgency=low
     - Add gnome-common to Build-Depends.
     - Move Build-Depends for libgtest-dev closer to the top of the build
       dependency list, to be consistent with other indicator packages.
+    - Update Vcs-Bzr, Vcs-Browser and add a notice to uploaders.
   * debian/source/format: migrate back to source format 1.0.
 
  -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Mon, 19 Nov 2012 10:48:07 -0500
