@@ -1,0 +1,4 @@
+usr/share/dbus-1
+usr/share/icons
+usr/lib/indicators3
+usr/lib/*/indicator-sync/indicator-sync-service

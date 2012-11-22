@@ -1,0 +1,88 @@
+Source: indicator-sync
+Section: gnome
+Priority: optional
+Maintainer: Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>
+Build-Depends: debhelper (>= 9),
+               dh-autoreconf,
+               intltool,
+               gnome-common,
+               libgtest-dev,
+               dbus-test-runner,
+               gobject-introspection,
+               libgirepository1.0-dev,
+               libgtk-3-dev,
+               libglib2.0-dev (>= 2.32.0),
+               libindicator3-dev,
+               libdbusmenu-glib-dev (>= 0.6.2),
+               libdbusmenu-gtk3-dev (>= 0.5.90),
+               gir1.2-dbusmenu-glib-0.4,
+               libido3-0.1-dev (>= 12.10.0),
+Standards-Version: 3.9.3
+Homepage: http://launchpad.net/indicator-sync
+# If you aren't a member of ~indicator-applet-developers but need to upload
+# packaging changes, just go ahead.  ~indicator-applet-developers will notice
+# and sync up the code again.
+Vcs-Bzr: https://code.launchpad.net/~indicator-applet-developers/indicator-sync/trunk.13.04
+Vcs-Browser: https://bazaar.launchpad.net/~indicator-applet-developers/indicator-sync/trunk.13.04/files
+
+Package: indicator-sync
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Multi-Arch: foreign
+Description: indicator for synchronisation processes status
+ A place on the user's desktop that collects status information data from
+ processes that involve some form of synchronisation with servers; such as
+ Ubuntu One, Dropbox, and others.
+ .
+ The menu provides a condensed and collected view of all of these providers
+ for quick view.
+
+Package: libsync-menu1
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Pre-Depends: ${misc:Pre-Depends},
+Replaces: libindicator-sync-client1,
+Conflicts: libindicator-sync-client1,
+Multi-Arch: same
+Description: indicator for synchronisation processes status - libraries
+ A place on the user's desktop that collects status information data from
+ processes that involve some form of synchronisation with servers; such as
+ Ubuntu One, Dropbox, and others.
+ .
+ This package contains libraries to support the features of the sync indicator.
+
+Package: gir1.2-syncmenu-0.1
+Architecture: any
+Depends: ${gir:Depends},
+         ${shlibs:Depends},
+         ${misc:Depends},
+Replaces: gir1.2-syncclient-12.10,
+Conflicts: gir1.2-syncclient-12.10,
+Description: indicator for synchronisation processes status - bindings
+ A place on the user's desktop that collects status information data from
+ processes that involve some form of synchronisation with servers; such as
+ Ubuntu One, Dropbox, and others.
+ .
+ This package can be used by other packages using the GIRepository format
+ to generate dynamic bindings.
+
+Package: libsync-menu-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         libsync-menu1 (= ${binary:Version}),
+         libdbusmenu-glib-dev,
+         libglib2.0-dev,
+Replaces: libindicator-sync-client1,
+Conflicts: libindicator-sync-client1,
+Description: indicator for synchronisation processes status - development files
+ A place on the user's desktop that collects status information data from
+ processes that involve some form of synchronisation with servers; such as
+ Ubuntu One, Dropbox, and others.
+ .
+ This package contains development files used for building applications that
+ make use of the sync indicator.
+
