@@ -7,6 +7,5 @@ extern "C" {
 }
 
 TEST(LauncherMenuItem, NameInitialized) {
-  g_type_init();
   EXPECT_TRUE(true);
 }

@@ -31,7 +31,6 @@ class ClientTest : public ::testing::Test
       static bool ran_once_init = false;
       if (!ran_once_init)
         {
-          g_type_init();
           g_setenv ("INDICATOR_SERVICE_SHUTDOWN_TIMEOUT", "5000", TRUE);
           g_unsetenv ("INDICATOR_ALLOW_NO_WATCHERS");
           g_unsetenv ("INDICATOR_SERVICE_REPLACE_MODE");
