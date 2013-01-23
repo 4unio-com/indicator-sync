@@ -643,8 +643,6 @@ main (int argc, char ** argv)
   bindtextdomain (GETTEXT_PACKAGE, GNOMELOCALEDIR);
   textdomain (GETTEXT_PACKAGE);
 
-  g_type_init ();
-
   sync_service.skeleton = dbus_sync_service_skeleton_new ();
 
   g_bus_get (G_BUS_TYPE_SESSION, NULL, on_got_bus, &sync_service);

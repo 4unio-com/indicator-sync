@@ -211,7 +211,6 @@ create_u1_sync_menu_app (void)
 int
 main (void)
 {
-  g_type_init ();
   create_u1_sync_menu_app ();
   g_main_loop_run (g_main_loop_new(NULL, FALSE));
   return 0;
