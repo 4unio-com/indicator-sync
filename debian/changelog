@@ -1,4 +1,4 @@
-indicator-sync (12.10.5-0ubuntu1) UNRELEASED; urgency=low
+indicator-sync (12.10.5daily13.01.25-0ubuntu1) raring; urgency=low
 
   [ Mathieu Trudel-Lapierre ]
   * debian/rules:
@@ -20,7 +20,14 @@ indicator-sync (12.10.5-0ubuntu1) UNRELEASED; urgency=low
   [ Didier Roche ]
   * Automatic snapshot from revision 28 (bootstrap)
 
- -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Mon, 19 Nov 2012 10:48:07 -0500
+  [ Charles Kerr ]
+  * indicators call deprecated glib function g_type_init() (LP:
+    #1103087)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 30
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 25 Jan 2013 02:01:11 +0000
 
 indicator-sync (12.10.4-0ubuntu1) quantal; urgency=low
 
