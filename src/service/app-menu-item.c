@@ -341,7 +341,6 @@ get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
           if (g_strv_length((gchar**)names) == 1)
             {
               gchar * tmp = g_strdup_printf ("%s-symbolic", names[0]);
-              g_clear_object (&icon);
               icon =  g_themed_icon_new_with_default_fallbacks (tmp);
               g_free (tmp);
               g_free (iconstr);
