@@ -485,16 +485,22 @@ on_sync_menu_app_menu_path_changed (GObject * o, GParamSpec * ps, gpointer gentr
 
 static void
 on_sync_menu_app_vanished (GDBusConnection * connection  G_GNUC_UNUSED,
-                         const gchar     * dbus_name,
-                         gpointer          user_data)
+                           const gchar     * dbus_name_in,
+                           gpointer          user_data)
 {
   ClientEntry * entry;
   SyncService * self = user_data;
+  gchar * dbus_name;
+
+  /* service_remove_entry() calls g_bus_unwatch_name() which frees dbus_name_in.
+     Make a temporary copy of dbus_name_in to ensure we don't pass a dangling
+     pointer to entry_find_from_dbus_name()... */
+  dbus_name = g_strdup (dbus_name_in);
 
   while ((entry = entry_find_from_dbus_name (self, dbus_name)))
-   {
-     service_remove_entry (self, entry);
-   }
+    service_remove_entry (self, entry);
+
+  g_free (dbus_name);
 }
 
 static ClientEntry *
