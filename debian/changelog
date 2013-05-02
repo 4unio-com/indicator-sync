@@ -1,3 +1,14 @@
+indicator-sync (12.10.5daily13.03.28.1-0ubuntu1) raring; urgency=low
+
+  [ Charles Kerr ]
+  * indicator-sync-service crashed with SIGSEGV in
+    g_type_check_instance_is_a() (LP: #1063003)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 32
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 28 Mar 2013 20:26:58 +0000
+
 indicator-sync (12.10.5daily13.01.25-0ubuntu1) raring; urgency=low
 
   [ Mathieu Trudel-Lapierre ]
