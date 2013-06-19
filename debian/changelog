@@ -1,3 +1,17 @@
+indicator-sync (12.10.5daily13.06.19-0ubuntu1) saucy; urgency=low
+
+  [ Jeremy Bicha ]
+  * According to Debian's GObject introspection mini-policy:
+    http://anonscm.debian.org/viewvc/pkg-gnome/desktop/unstable/gobject-
+    introspection/debian/policy.txt?view=markup This is dependent on
+    https://code.launchpad.net/~jbicha/libdbusmenu/have-dev-depend-on-
+    gir/+merge/168038.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 34
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 19 Jun 2013 02:01:39 +0000
+
 indicator-sync (12.10.5daily13.03.28.1-0ubuntu1) raring; urgency=low
 
   [ Charles Kerr ]
