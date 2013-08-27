@@ -1,11 +1,11 @@
 SUBDIRS = icons
 
-dbus_servicesdir = $(DBUSSERVICEDIR)
-dbus_services_DATA = indicator-sync.service
+upstart_jobsdir = $(datadir)/upstart/sessions
+upstart_jobs_DATA = indicator-sync.conf
 
-%.service: %.service.in
+%.conf: %.conf.in
 	sed -e "s|\@pkglibexecdir\@|$(pkglibexecdir)|" $< > $@
 
-EXTRA_DIST = indicator-sync.service.in
+EXTRA_DIST = indicator-sync.conf.in
 
-CLEANFILES = indicator-sync.service
+CLEANFILES = indicator-sync.conf
