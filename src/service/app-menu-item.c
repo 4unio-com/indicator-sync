@@ -384,7 +384,6 @@ get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
   if (icon != NULL)
     {
       iconstr = g_icon_to_string (icon);
-      g_message ("--> %s", g_variant_print (g_icon_serialize (icon), TRUE));
       g_object_unref (icon);
     }
 
