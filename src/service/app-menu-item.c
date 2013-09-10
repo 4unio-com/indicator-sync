@@ -329,26 +329,40 @@ get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
 
   if ((iconstr == NULL) && (app_info != NULL))
     {
-      GIcon * icon = g_app_info_get_icon (app_info);
-      iconstr = g_icon_to_string (icon);
+      GIcon * icon;
+      GThemedIcon * themed_icon;
 
-      /* if GAppInfo returned a themed but non-symbolic icon,
-         let's add the symbolic option here */
-      if (G_IS_THEMED_ICON(icon))
+      icon = g_app_info_get_icon (app_info);
+
+      /* let symbolic name(s) override the one(s) provided by appinfo */
+      if ((themed_icon = G_THEMED_ICON (icon)))
         {
-          GThemedIcon * themed_icon = G_THEMED_ICON (icon);
-          const gchar * const * names = g_themed_icon_get_names (themed_icon);
-          if (g_strv_length((gchar**)names) == 1)
+          guint i, n;
+          const gchar * const * names;
+          GPtrArray * new_names;
+
+          names = g_themed_icon_get_names (themed_icon);
+          n = g_strv_length ((gchar**)names);
+          new_names = g_ptr_array_new_full (n*2, g_free);
+
+          for (i=0; i<n; i++)
             {
-              gchar * tmp = g_strdup_printf ("%s-symbolic", names[0]);
-              icon =  g_themed_icon_new_with_default_fallbacks (tmp);
-              g_free (tmp);
-              g_free (iconstr);
-              iconstr = g_icon_to_string (icon);
+              const gchar * name = names[i];
+
+              if (!g_str_has_suffix (name, "-symbolic"))
+                g_ptr_array_add (new_names, g_strdup_printf ("%s-symbolic", name));
+
+              g_ptr_array_add (new_names, g_strdup (name));
             }
+
+          g_object_unref (icon);
+          icon = g_themed_icon_new_from_names ((char**)new_names->pdata, new_names->len);
+
+          g_ptr_array_unref (new_names);
         }
 
-      g_clear_object (&icon);
+      iconstr = g_icon_to_string (icon);
+      g_object_unref (icon);
     }
 
   if (iconstr == NULL)
