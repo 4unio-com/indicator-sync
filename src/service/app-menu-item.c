@@ -344,6 +344,8 @@ get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
             }
           g_free (str);
         }
+
+     g_key_file_free (keyfile);
     }
 
   /* as a fallback, use the app_info's icon */
