@@ -36,7 +36,7 @@
 #include "dbus-shared.h"
 #include "sync-app-dbus.h"
 
-#define ICON_KEY  "X-Ayatana-Sync-Menu-Icon"
+#define SYNC_MENU_ICON_KEY  "X-Ayatana-Sync-Menu-Icon"
 
 #define PROP_ICON         APPLICATION_MENUITEM_PROP_ICON
 #define PROP_NAME         APPLICATION_MENUITEM_PROP_NAME
@@ -314,47 +314,81 @@ app_menu_item_get_name (AppMenuItem * appitem)
 static gchar*
 get_iconstr (const gchar * desktop_filename, GAppInfo * app_info)
 {
+  GIcon * icon = NULL;
   gchar * iconstr = NULL;
 
-  if ((iconstr == NULL) && (desktop_filename != NULL))
+  /* If the .desktop file has an Icon entry, use that */
+  if (desktop_filename != NULL)
     {
       /* see if the .desktop file has an entry specifying its sync menu icon */
       GKeyFile * keyfile = g_key_file_new ();
-      g_key_file_load_from_file (keyfile, desktop_filename,
-                                 G_KEY_FILE_NONE, NULL);
-      iconstr = g_key_file_get_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
-                                       ICON_KEY, NULL);
+      gchar * str = NULL;
+
+      if (g_key_file_load_from_file (keyfile, desktop_filename, G_KEY_FILE_NONE, NULL))
+        {
+          str = g_key_file_get_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+                                       SYNC_MENU_ICON_KEY, NULL);
+          if (str == NULL)
+            str = g_key_file_get_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+                                         G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
+        }
+
+      if (str != NULL)
+        {
+          GError * error = NULL;
+          icon = g_icon_new_for_string (str, &error);
+          if (error != NULL)
+            {
+              g_warning ("Unable to load icon '%s': %s", str, error->message);
+              g_error_free (error);
+            }
+          g_free (str);
+        }
+
       g_key_file_free (keyfile);
     }
 
-  if ((iconstr == NULL) && (app_info != NULL))
-    {
-      GIcon * icon = g_app_info_get_icon (app_info);
-      iconstr = g_icon_to_string (icon);
+  /* as a fallback, use the app_info's icon */
+  if (icon == NULL)
+    icon = g_app_info_get_icon (app_info);
 
-      /* if GAppInfo returned a themed but non-symbolic icon,
-         let's add the symbolic option here */
-      if (G_IS_THEMED_ICON(icon))
+    
+  /* if the icon provided is a themed one, 
+     let symbolic name(s) override the one(s) provided above */
+  if (G_IS_THEMED_ICON (icon))
+    {
+      guint i, n;
+      const gchar * const * names;
+      GPtrArray * new_names;
+
+      names = g_themed_icon_get_names (G_THEMED_ICON(icon));
+      n = g_strv_length ((gchar**)names);
+      new_names = g_ptr_array_new_full (n*2, g_free);
+
+      for (i=0; i<n; i++)
         {
-          GThemedIcon * themed_icon = G_THEMED_ICON (icon);
-          const gchar * const * names = g_themed_icon_get_names (themed_icon);
-          if (g_strv_length((gchar**)names) == 1)
-            {
-              gchar * tmp = g_strdup_printf ("%s-symbolic", names[0]);
-              icon =  g_themed_icon_new_with_default_fallbacks (tmp);
-              g_free (tmp);
-              g_free (iconstr);
-              iconstr = g_icon_to_string (icon);
-            }
+          const gchar * name = names[i];
+
+          if (!g_str_has_suffix (name, "-symbolic"))
+            g_ptr_array_add (new_names, g_strdup_printf ("%s-symbolic", name));
+
+          g_ptr_array_add (new_names, g_strdup (name));
         }
 
-      g_clear_object (&icon);
+      g_object_unref (icon);
+      icon = g_themed_icon_new_from_names ((char**)new_names->pdata, new_names->len);
+
+      g_ptr_array_unref (new_names);
+    }
+
+  if (icon != NULL)
+    {
+      iconstr = g_icon_to_string (icon);
+      g_object_unref (icon);
     }
 
   if (iconstr == NULL)
-    {
-      iconstr = g_strdup ("gtk-missing-image");
-    }
+    iconstr = g_strdup ("gtk-missing-image");
 
   return iconstr;
 }
