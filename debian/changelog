@@ -1,3 +1,13 @@
+indicator-sync (12.10.5+13.10.20130913-0ubuntu1) saucy; urgency=low
+
+  [ Charles Kerr ]
+  * Fix client icon issues in indicator-sync-service. (LP: #1218536)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 36
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 13 Sep 2013 15:15:28 +0000
+
 indicator-sync (12.10.5daily13.06.19-0ubuntu1) saucy; urgency=low
 
   [ Jeremy Bicha ]
