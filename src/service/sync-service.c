@@ -617,7 +617,7 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 
       if (err != NULL)
         {
-          g_error ("unable to get bus: %s", err->message);
+          g_error ("unable to export service: %s", err->message);
           g_clear_error (&err);
         }
 
