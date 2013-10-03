@@ -596,7 +596,7 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 
   if (err != NULL)
     {
-      g_error ("unable to get bus: %s", err->message);
+      g_warning ("unable to get bus: %s", err->message);
       g_clear_error (&err);
       g_main_loop_quit (sync_service.mainloop);
     }
