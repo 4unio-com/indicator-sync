@@ -1,3 +1,24 @@
+indicator-sync (12.10.5+13.10.20131011-0ubuntu1) saucy; urgency=low
+
+  [ Charles Kerr ]
+  * As we discussed on Thursday, in on_bus_got(), demote bus errors from
+    g_error() to g_warning() since we're about to exit anyway.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 38
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Oct 2013 04:27:02 +0000
+
+indicator-sync (12.10.5+13.10.20130913-0ubuntu1) saucy; urgency=low
+
+  [ Charles Kerr ]
+  * Fix client icon issues in indicator-sync-service. (LP: #1218536)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 36
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 13 Sep 2013 15:15:28 +0000
+
 indicator-sync (12.10.5daily13.06.19-0ubuntu1) saucy; urgency=low
 
   [ Jeremy Bicha ]
