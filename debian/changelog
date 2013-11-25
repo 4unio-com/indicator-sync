@@ -1,3 +1,13 @@
+indicator-sync (12.10.5+14.04.20131125-0ubuntu1) trusty; urgency=low
+
+  [ Ted Gould ]
+  * Upstart jobs. (LP: #1185565)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 40
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 25 Nov 2013 03:55:05 +0000
+
 indicator-sync (12.10.5+13.10.20131011-0ubuntu1) saucy; urgency=low
 
   [ Charles Kerr ]
