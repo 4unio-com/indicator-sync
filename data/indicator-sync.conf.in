@@ -5,4 +5,7 @@ stop on desktop-end or indicator-services-end
 
 respawn
 
+# limit to two times in a five second period
+respawn limit 2 5
+
 exec @pkglibexecdir@/indicator-sync-service
