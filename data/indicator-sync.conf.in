@@ -5,4 +5,14 @@ stop on desktop-end or indicator-services-end
 
 respawn
 
+# limit to two times in a five second period
+respawn limit 2 5
+
+pre-start script
+	# The sync indicator shouldn't be on the greeter
+	if [ "${USER}" = "lightdm" ]; then
+		stop
+	fi
+end script
+
 exec @pkglibexecdir@/indicator-sync-service
