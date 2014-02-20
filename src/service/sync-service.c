@@ -70,7 +70,6 @@ typedef struct SyncService
 {
   GMainLoop * mainloop;
 
-  IndicatorService * indicator_service;
   DbusmenuServer * menu_server;
   DbusSyncService * skeleton;
   guint signal_subscription;
@@ -602,13 +601,6 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
     }
   else
     {
-      service->indicator_service = indicator_service_new_version (SYNC_SERVICE_DBUS_NAME,
-                                                                  1);
-      g_signal_connect_swapped (sync_service.indicator_service,
-                                INDICATOR_SERVICE_SIGNAL_SHUTDOWN,
-                                G_CALLBACK(g_main_loop_quit),
-                                sync_service.mainloop);
-
       g_dbus_interface_skeleton_export (
           G_DBUS_INTERFACE_SKELETON(service->skeleton),
           connection,
@@ -664,6 +656,5 @@ main (int argc, char ** argv)
   g_slist_free_full (sync_service.client_entries, (GDestroyNotify)entry_free);
   g_clear_object (&sync_service.menu_server);
   g_clear_object (&sync_service.skeleton);
-  g_clear_object (&sync_service.indicator_service);
   return 0;
 }
