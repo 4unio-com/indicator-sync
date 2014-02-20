@@ -173,6 +173,7 @@ AC_CONFIG_FILES([Makefile
                  data/icons/22x22/status/Makefile
                  data/icons/24x24/Makefile
                  data/icons/24x24/status/Makefile
+                 data/upstart/Makefile
                  examples/Makefile
                  test/Makefile
                  test/indicator-sync.service

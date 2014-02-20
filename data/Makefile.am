@@ -1,4 +1,4 @@
-SUBDIRS = icons
+SUBDIRS = icons upstart
 
 upstart_jobsdir = $(datadir)/upstart/sessions
 upstart_jobs_DATA = indicator-sync.conf
@@ -7,7 +7,7 @@ upstart_jobs_DATA = indicator-sync.conf
 	sed -e "s|\@pkglibexecdir\@|$(pkglibexecdir)|" $< > $@
 
 xdg_autostartdir = /etc/xdg/autostart
-xdg_autostart_DATA = indicator-sync.conf
+xdg_autostart_DATA = indicator-sync.desktop
 
 %.desktop: %.desktop.in
 	sed -e "s|\@pkglibexecdir\@|$(pkglibexecdir)|" $< > $@
