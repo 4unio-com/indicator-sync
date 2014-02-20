@@ -40,11 +40,6 @@ class ClientTest : public ::testing::Test
       main_loop = g_main_loop_new (NULL, FALSE);
       // pull up a test dbus that's pointed at our test .service file
       test_dbus = g_test_dbus_new (G_TEST_DBUS_NONE);
-      g_debug (G_STRLOC" service dir path is \"%s\"", INDICATOR_SERVICE_DIR);
-      g_test_dbus_add_service_dir (test_dbus, INDICATOR_SERVICE_DIR);
-
-      // allow the service to exist w/o a sync indicator
-      g_setenv ("INDICATOR_ALLOW_NO_WATCHERS", "1", TRUE);
 
       g_test_dbus_up (test_dbus);
       g_debug (G_STRLOC" this test bus' address is \"%s\"", g_test_dbus_get_bus_address(test_dbus));
@@ -63,15 +58,13 @@ class ClientTest : public ::testing::Test
       g_clear_pointer (&main_loop, g_main_loop_unref);
     }
 
-    void SetUpServiceProxy (bool autostart=false)
+    void SetUpServiceProxy ()
     {
       GError * err;
 
       ASSERT_TRUE (session_bus != NULL);
 
       int flags = G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES;
-      if (!autostart)
-        flags |= G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START;
 
       g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
       err = NULL;
@@ -297,7 +290,7 @@ TEST_F (ClientTest, TestMenu)
   DbusmenuMenuitem * root;
   DbusmenuServer * menu_server;
   DbusmenuClient * menu_client;
-  SetUpServiceProxy (false);
+  SetUpServiceProxy ();
 
   app = sync_menu_app_new ("transmission-gtk.desktop");
   WaitForSignal (service_proxy, "notify::g-name-owner");
@@ -334,7 +327,7 @@ TEST_F (ClientTest, TestClientCount)
   SyncMenuApp * app[3];
 
   ASSERT_TRUE (service_proxy == NULL);
-  SetUpServiceProxy (true);
+  SetUpServiceProxy ();
   ASSERT_TRUE (ServiceProxyIsOwned ());
 
   app[0] = sync_menu_app_new ("a.desktop");
@@ -364,7 +357,7 @@ TEST_F (ClientTest, TestPaused)
 {
   /* start up the service */
   ASSERT_TRUE (service_proxy == NULL);
-  SetUpServiceProxy (true);
+  SetUpServiceProxy ();
   ASSERT_TRUE (ServiceProxyIsOwned ());
 
   /* add three SyncMenuApps */
@@ -405,7 +398,7 @@ TEST_F (ClientTest, TestState)
 {
   /* start up the service */
   ASSERT_TRUE (service_proxy == NULL);
-  SetUpServiceProxy (true);
+  SetUpServiceProxy ();
   ASSERT_TRUE (ServiceProxyIsOwned ());
 
   /* add three SyncMenuApps */
