@@ -288,34 +288,6 @@ TEST_F (ClientTest, TestGObjectAccessors)
 }
 
 /***
-****
-***/
-
-TEST_F (ClientTest, TestCanStartService)
-{
-  ASSERT_TRUE (service_proxy == NULL);
-  SetUpServiceProxy (true);
-  ASSERT_TRUE (ServiceProxyIsOwned ());
-  TearDownServiceProxy ();
-}
-
-TEST_F (ClientTest, AppCanStartService)
-{
-  SyncMenuApp * app;
-  SetUpServiceProxy (false);
-
-  app = sync_menu_app_new ("transmission-gtk.desktop");
-  WaitForSignal (service_proxy, "notify::g-name-owner");
-  ASSERT_TRUE (ServiceProxyIsOwned ());
-
-  WaitForSignal (service_proxy, "notify::client-count");
-  ASSERT_EQ (1, dbus_sync_service_get_client_count (service_proxy));
-
-  TearDownServiceProxy ();
-  g_clear_object (&app);
-}
-
-/***
 ****  Confirm that changing our menu triggers the service to layout-update
 ***/
 
