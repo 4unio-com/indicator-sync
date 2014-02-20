@@ -2,7 +2,7 @@
 Type=Application
 Name=Indicator Sync
 Exec=@pkglibexecdir@/indicator-sync-service
-NotShowIn=Unity;
+OnlyShowIn=Unity;
 NoDisplay=true
 StartupNotify=false
 Terminal=false
