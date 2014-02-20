@@ -1,12 +1,10 @@
-description "Indicator Sync Backend"
+description "Indicator Sync Service"
 
-start on indicators-loaded or indicator-services-start
+start on indicator-services-start
 stop on desktop-end or indicator-services-end
 
 respawn
-
-# limit to two times in a five second period
-respawn limit 2 5
+respawn limit 2 10
 
 pre-start script
 	# The sync indicator shouldn't be on the greeter
