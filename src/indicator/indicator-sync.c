@@ -33,7 +33,6 @@
 
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-object.h>
-#include <libindicator/indicator-service-manager.h>
 
 #include <libido/idoswitchmenuitem.h>
 
@@ -61,9 +60,9 @@ struct _IndicatorSync
 {
   IndicatorObject            parent;
   IndicatorObjectEntry       entry;
-  IndicatorServiceManager  * service_manager;
   DbusSyncService          * sync_service_proxy;
   DbusmenuGtkClient        * menu_client;
+  guint                      name_watch;
 };
 
 GType indicator_sync_get_type (void);
@@ -89,9 +88,14 @@ static gboolean new_item_prog (DbusmenuMenuitem * newitem,
 
 static void update_icon (IndicatorSync * self);
 
-static void on_service_manager_connection_changed (IndicatorServiceManager * sm,
-                                                   gboolean connected,
-                                                   gpointer user_data);
+static void name_appeared (GDBusConnection  * con,
+                           const gchar *      name,
+                           const gchar *      owner,
+                           gpointer           user_data);
+
+static void name_vanished (GDBusConnection  * con,
+                           const gchar *      name,
+                           gpointer           user_data);
 
 /***
 ****
@@ -142,11 +146,12 @@ indicator_sync_init (IndicatorSync *self)
   gtk_widget_show (GTK_WIDGET(self->entry.image));
 
   /* init the service manager */
-  self->service_manager = indicator_service_manager_new_version (
-                            SYNC_SERVICE_DBUS_NAME, 1);
-  g_signal_connect (self->service_manager,
-                    INDICATOR_SERVICE_MANAGER_SIGNAL_CONNECTION_CHANGE,
-                    G_CALLBACK(on_service_manager_connection_changed), self);
+  self->name_watch = g_bus_watch_name(G_BUS_TYPE_SESSION,
+                                      SYNC_SERVICE_DBUS_NAME,
+                                      G_BUS_NAME_WATCHER_FLAGS_NONE,
+                                      name_appeared,
+                                      name_vanished,
+                                      self, NULL);
 }
 
 static void
@@ -155,8 +160,13 @@ indicator_sync_dispose (GObject *object)
   IndicatorSync * self = INDICATOR_SYNC(object);
   g_return_if_fail (self != NULL);
 
+  if (self->name_watch != 0)
+    {
+      g_bus_unwatch_name(self->name_watch);
+      self->name_watch = 0;
+    }
+
   g_clear_object (&self->sync_service_proxy);
-  g_clear_object (&self->service_manager);
   g_clear_object (&self->entry.image);
 
   if (self->entry.menu)
@@ -343,19 +353,28 @@ on_service_paused_changed (GObject     * o          G_GNUC_UNUSED,
 
 /* manage our service proxy based on whether or not the manager's connected */
 static void 
-on_service_manager_connection_changed (IndicatorServiceManager  * sm,
-                                       gboolean                   connected,
-                                       gpointer                   user_data)
+name_vanished (GDBusConnection  * con,
+               const gchar *      name,
+               gpointer           user_data)
 {
   IndicatorSync * self = INDICATOR_SYNC(user_data);
   g_return_if_fail (self != NULL);
 
-  if (!connected)
-    {
-      g_clear_object (&self->sync_service_proxy);
-      update_visibility (self);
-    }
-  else if (self->sync_service_proxy == NULL)
+  g_clear_object (&self->sync_service_proxy);
+  update_visibility (self);
+}
+
+
+static void 
+name_appeared (GDBusConnection  * con,
+               const gchar *      name,
+               const gchar *      owner,
+               gpointer           user_data)
+{
+  IndicatorSync * self = INDICATOR_SYNC(user_data);
+  g_return_if_fail (self != NULL);
+
+  if (self->sync_service_proxy == NULL)
     {
       GError * err = NULL;
       self->sync_service_proxy = dbus_sync_service_proxy_new_for_bus_sync (
