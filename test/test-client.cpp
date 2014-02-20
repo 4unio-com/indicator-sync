@@ -28,15 +28,6 @@ class ClientTest : public ::testing::Test
       main_loop = NULL;
       service_proxy = NULL;
 
-      static bool ran_once_init = false;
-      if (!ran_once_init)
-        {
-          g_setenv ("INDICATOR_SERVICE_SHUTDOWN_TIMEOUT", "5000", TRUE);
-          g_unsetenv ("INDICATOR_ALLOW_NO_WATCHERS");
-          g_unsetenv ("INDICATOR_SERVICE_REPLACE_MODE");
-          ran_once_init = true;
-        }
-
       main_loop = g_main_loop_new (NULL, FALSE);
       // pull up a test dbus that's pointed at our test .service file
       test_dbus = g_test_dbus_new (G_TEST_DBUS_NONE);
