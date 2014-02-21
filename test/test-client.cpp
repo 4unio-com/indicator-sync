@@ -34,7 +34,10 @@ class ClientTest : public ::testing::Test
 
       g_test_dbus_up (test_dbus);
       g_debug (G_STRLOC" this test bus' address is \"%s\"", g_test_dbus_get_bus_address(test_dbus));
+
       session_bus = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, NULL);
+      g_dbus_connection_set_exit_on_close (session_bus, FALSE);
+      g_object_add_weak_pointer (G_OBJECT(session_bus), (gpointer *)&session_bus);
       g_debug (G_STRLOC" the dbus connection %p unique name is \"%s\"", session_bus, g_dbus_connection_get_unique_name(session_bus));
       g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
     }
@@ -42,10 +45,17 @@ class ClientTest : public ::testing::Test
     // undo SetUp
     virtual void TearDown()
     {
-      g_clear_object (&session_bus);
+      g_object_unref(session_bus);
+      int count = 0;
+      while (session_bus != NULL && count < 10)
+        WaitForSignal(NULL, NULL, 1);
+
+      ASSERT_LT(count, 10);
+
       g_debug (G_STRLOC" tearing down the bus");
       g_test_dbus_down (test_dbus);
       g_clear_object (&test_dbus);
+
       g_clear_pointer (&main_loop, g_main_loop_unref);
     }
 
@@ -54,6 +64,7 @@ class ClientTest : public ::testing::Test
       GError * err;
 
       ASSERT_TRUE (session_bus != NULL);
+      ASSERT_TRUE (g_spawn_command_line_async(INDICATOR_SERVICE, NULL));
 
       int flags = G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES;
 
@@ -67,6 +78,12 @@ class ClientTest : public ::testing::Test
         NULL, &err);
       if (err != NULL)
         g_error ("unable to create service proxy: %s", err->message);
+
+      int count = 0;
+      for (int count = 0; !ServiceProxyIsOwned() && count < 5; count++)
+        WaitForSignal(service_proxy, "notify::g-name-owner", 1);
+      ASSERT_LT(count, 5);
+
       g_debug (G_STRLOC" the service proxy %p refcount is %d", service_proxy, G_OBJECT(service_proxy)->ref_count);
       g_debug (G_STRLOC" the dbus connection %p refcount is %d", session_bus, G_OBJECT(session_bus)->ref_count);
       g_debug (G_STRLOC" proxy's name owner is \"%s\"", g_dbus_proxy_get_name_owner(G_DBUS_PROXY(service_proxy)));
@@ -80,6 +97,7 @@ class ClientTest : public ::testing::Test
       g_return_val_if_fail (service_proxy != NULL, FALSE);
 
       gchar * owner = g_dbus_proxy_get_name_owner (G_DBUS_PROXY(service_proxy));
+      g_debug (G_STRLOC" proxy's name owner is \"%s\"", owner);
       const bool is_owned = owner && *owner;
       g_free (owner);
       return is_owned;
@@ -106,21 +124,10 @@ class ClientTest : public ::testing::Test
       g_clear_pointer (&ret, g_variant_unref);
     }
 
-    void ServiceProxyShutdown ()
-    {
-      CallIndicatorServiceMethod ("Shutdown");
-      WaitForSignal (service_proxy, "notify::g-name-owner");
-
-      ASSERT_FALSE (ServiceProxyIsOwned ());
-    }
-
     // undo SetUpServiceProxy
     void TearDownServiceProxy ()
     {
       ASSERT_TRUE (service_proxy != NULL);
-
-      if (ServiceProxyIsOwned ())
-          ServiceProxyShutdown ();
 
       g_clear_object (&service_proxy);
     }
@@ -133,20 +140,18 @@ class ClientTest : public ::testing::Test
     }
 
     void
-    WaitForSignal (gpointer instance, const gchar * detailed_signal)
+    WaitForSignal (gpointer instance, const gchar * detailed_signal, int timeout_seconds = 5)
     {
-      guint timeout_id;
-      gulong handler_id;
-      const int timeout_seconds = 5;
+      guint timeout_id = 0;
+      gulong handler_id = 0;
 
-      ASSERT_TRUE (instance != NULL);
       ASSERT_TRUE (main_loop != NULL);
 
-
-      handler_id = g_signal_connect_swapped (instance,
-                                             detailed_signal,
-                                             G_CALLBACK(g_main_loop_quit),
-                                             main_loop);
+      if (instance != NULL)
+        handler_id = g_signal_connect_swapped (instance,
+                                               detailed_signal,
+                                               G_CALLBACK(g_main_loop_quit),
+                                               main_loop);
 
       timeout_id = g_timeout_add_seconds (timeout_seconds,
                                           on_wait_timeout,
@@ -154,9 +159,10 @@ class ClientTest : public ::testing::Test
 
       // wait for the signal or for timeout, whichever comes first
       g_main_loop_run (main_loop);
-      ASSERT_TRUE (g_main_context_find_source_by_id(NULL,timeout_id) != NULL);
-      g_signal_handler_disconnect (instance, handler_id);
-      g_source_remove (timeout_id);
+      if (handler_id != 0)
+        g_signal_handler_disconnect (instance, handler_id);
+      if (g_main_context_find_source_by_id(NULL,timeout_id) != NULL)
+        g_source_remove (timeout_id);
     }
 
     static void log_counter_func (const gchar *log_domain,
@@ -284,7 +290,7 @@ TEST_F (ClientTest, TestMenu)
   SetUpServiceProxy ();
 
   app = sync_menu_app_new ("transmission-gtk.desktop");
-  WaitForSignal (service_proxy, "notify::g-name-owner");
+
   ASSERT_TRUE (ServiceProxyIsOwned ());
 
   WaitForSignal (service_proxy, "notify::client-count");
