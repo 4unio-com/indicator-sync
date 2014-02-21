@@ -587,6 +587,14 @@ on_sync_menu_app_exists (GDBusConnection * connection,
 ****/
 
 static void
+name_lost (GDBusConnection * con, const gchar * name, gpointer user_data)
+{
+  SyncService * service = user_data;
+  g_warning ("lost name on bus: %s", name);
+  g_main_loop_quit (service->mainloop);
+}
+
+static void
 on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
 {
   GError * err = NULL;
@@ -626,6 +634,14 @@ on_got_bus (GObject * o, GAsyncResult * res, gpointer user_data)
                                        on_sync_menu_app_exists,
                                        service,
                                        NULL); /* destroy notify */
+
+      g_bus_own_name_on_connection(connection,
+                                   SYNC_SERVICE_DBUS_NAME,
+                                   G_BUS_NAME_OWNER_FLAGS_NONE,
+                                   NULL, /* acquired */
+                                   name_lost,
+                                   service,
+                                   NULL); /* destroy notify */
 
       /* cleanup */
       g_object_unref (connection);
