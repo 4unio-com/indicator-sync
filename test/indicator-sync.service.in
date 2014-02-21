@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=com.canonical.indicator.sync
-Exec=@abs_top_builddir@/src/service/indicator-sync-service

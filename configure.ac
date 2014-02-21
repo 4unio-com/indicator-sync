@@ -176,7 +176,6 @@ AC_CONFIG_FILES([Makefile
                  data/upstart/Makefile
                  examples/Makefile
                  test/Makefile
-                 test/indicator-sync.service
                  po/Makefile.in])
 AC_OUTPUT
 

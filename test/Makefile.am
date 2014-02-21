@@ -35,7 +35,7 @@ test_client_LDADD = \
   libgtest.a
 
 test_client_CPPFLAGS = \
-  -DINDICATOR_SERVICE_DIR="\"$(abs_builddir)\"" \
+  -DINDICATOR_SERVICE="\"$(abs_top_builddir)/src/indicator-sync-service\"" \
   -I$(top_srcdir)/src/ \
   -I$(top_builddir)/src/ \
   $(SYNC_LIB_DEPS_CFLAGS) \
